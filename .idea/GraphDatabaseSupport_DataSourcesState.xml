@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GraphDatabaseSupport.DataSourcesState">
+    <option name="containerV1">
+      <DataSourceContainerV1>
+        <option name="dataSources">
+          <list>
+            <DataSourceV1>
+              <option name="uuid" value="6770cb67-0a50-4f79-98f5-a69f2652824e" />
+              <option name="name" value="C:\Users\Gabriela\Documents\Neo4j\default.graphdb" />
+              <option name="dataSourceType" value="NEO4J_BOLT" />
+              <option name="configuration">
+                <map>
+                  <entry key="host" value="localhost" />
+                  <entry key="password" value="turnandturnagain" />
+                  <entry key="port" value="7687" />
+                  <entry key="user" value="neo4j" />
+                </map>
+              </option>
+            </DataSourceV1>
+            <DataSourceV1>
+              <option name="uuid" value="2f896a3b-9f78-4a65-84e8-db85c072743d" />
+              <option name="name" value="openie" />
+              <option name="dataSourceType" value="NEO4J_BOLT" />
+              <option name="configuration">
+                <map>
+                  <entry key="host" value="localhost" />
+                  <entry key="password" value="openie" />
+                  <entry key="port" value="7687" />
+                  <entry key="user" value="neo4j" />
+                </map>
+              </option>
+            </DataSourceV1>
+          </list>
+        </option>
+      </DataSourceContainerV1>
+    </option>
+  </component>
+</project>
