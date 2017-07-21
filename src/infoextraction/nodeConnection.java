@@ -8,6 +8,13 @@ public class nodeConnection {
     private String connectingNodeName = "";
     private String date = "";
 
+
+    public nodeConnection setUpConnection(String eName,String nodeName){
+        edgeName += eName;
+        connectingNodeName += nodeName;
+        return this;
+    }
+
     public String getEdgeName(){ return edgeName;}
     public String getConnectingNodeName() {return connectingNodeName;}
     public String getDate(){ return  date;}

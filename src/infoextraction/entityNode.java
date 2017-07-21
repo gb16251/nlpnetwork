@@ -10,6 +10,10 @@ public class entityNode {
     private String entityType = "";
     private int connectionNumber = 0;
 
+    public entityNode createNode(String s, List<nodeConnection> cons){
+        nodeName+= s;
+        return this;
+    }
     public int getConnectionNumber(){return connectionNumber;}
 
     public String getNodeName(){ return nodeName;}
