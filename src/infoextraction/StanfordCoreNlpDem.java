@@ -1,15 +1,11 @@
+package infoextraction;
+
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 
 import java.io.IOException;
@@ -22,7 +18,7 @@ import java.util.Properties;
 /** This class demonstrates building and using a Stanford CoreNLP pipeline. */
 public class StanfordCoreNlpDem {
 
-  /** Usage: java -cp "*" StanfordCoreNlpDem [inputFile [outputTextFile [outputXmlFile]]] */
+  /** Usage: java -cp "*" infoextraction.StanfordCoreNlpDem [inputFile [outputTextFile [outputXmlFile]]] */
   public static void main(String[] args) throws IOException {
     // set up optional output files
     PrintWriter out;

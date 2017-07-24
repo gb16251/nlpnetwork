@@ -1,5 +1,4 @@
-import java.io.IOException;
-import java.util.Vector;
+package infoextraction;
 
 /**
  * Created by Gabriela on 07-Jul-17.

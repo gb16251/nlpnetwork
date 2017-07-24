@@ -1,3 +1,5 @@
+package infoextraction;
+
 import edu.stanford.nlp.trees.Tree;
 
 import java.io.PrintStream;

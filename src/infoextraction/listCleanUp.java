@@ -1,3 +1,5 @@
+package infoextraction;
+
 /**
  * Created by Gabriela on 22-Jun-17.
  */

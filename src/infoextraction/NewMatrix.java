@@ -1,4 +1,4 @@
-/**
+package infoextraction; /**
  * Created by Gabriela on 21-Jun-17.
  */
 /*

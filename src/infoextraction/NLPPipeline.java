@@ -1,32 +1,25 @@
-/**
+package infoextraction; /**
  * Created by Gabriela on 14-Jun-17.
  */
-import edu.stanford.nlp.coref.CorefCoreAnnotations;
-import edu.stanford.nlp.coref.data.CorefChain;
-import edu.stanford.nlp.coref.data.Mention;
-import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.TregexMatcher;
-import edu.stanford.nlp.trees.tregex.TregexPattern;
 import edu.stanford.nlp.util.CoreMap;
 
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.*;
 
 public class NLPPipeline {
     PrintStream ps = new PrintStream(System.out);
     graphDbPipeline database = new graphDbPipeline();
+
+
     private void startDB(){
         try {
-            database.initializeGraphDB();
+           database.initializeGraphDB();
         }
         catch (IOException e ){}
     }
@@ -41,7 +34,7 @@ public class NLPPipeline {
     public void startPipeLine(){
         openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize,ssplit,pos,lemma, depparse,natlog");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         List<String> texts = filestream.getText();
         for (String text : texts){
@@ -62,12 +55,14 @@ public class NLPPipeline {
 
 
     public void getAnnotations (List<CoreMap> sentences) {
+        netTemplate network = new netTemplate();
         for (CoreMap sentence : sentences) {
-            Sentence sent = new Sentence(sentence);
-//            ps.print(sent);
-//            addToDataBase(sentence);
-              createPairs(addEntitiesToTemplate(sentence),getTimeStamps(sentence));
+              network = createPairs(addEntitiesToTemplate(sentence),getTimeStamps(sentence),network);
         }
+        for (conTemplate con: network.getConnections()){
+            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
+        }
+        network.printNetwork();
     }
 //    Add to test structures - no relations, just enttiies
     public List<String> addEntitiesToTemplate(CoreMap sentence){
@@ -78,25 +73,15 @@ public class NLPPipeline {
         return ents;
     }
 
-//    Create pairs from entities list
-    public void createPairs (List<String> ents, List<String> date){
-        networkTemplate net = new networkTemplate();
-        for (String s1: ents){
-            entityNode Node = new entityNode();
-            Node.setNodeName(s1);
-            for (String s2 : ents){
-                if(!s2.equals(s1)) {
-                    nodeConnection connect = new nodeConnection();
-                    connect.setConnectingNodeName(s2);
-                    connect.setDate(date);
-                    Node.addConnection(connect);
-                    database.addBasicConnection(s1,s2,listToString(date));
-                }
+    private netTemplate createPairs (List<String> ents, List<String> date,netTemplate net) {
+        for (String s1:ents){
+            for (int i = s1.indexOf(s1) + 1; i< ents.size();i++){
+                net.addConnection(s1,ents.get(i),listToString(date));
             }
-            net.addNode(Node);
         }
-        net.printNetworkCons();
+        return net;
     }
+
 
     public String listToString(List<String> dates){
         String date = "";
@@ -106,12 +91,8 @@ public class NLPPipeline {
         }
         return date;
     }
-    public void addToDataBase(CoreMap sentence){
-        for (String s: getNamedEntities(sentence)){
-            database.addNode(s);
-        }
-    }
-    public List<String> getNamedEntities(CoreMap sentence ){
+
+    public List<String> getNamedEntities(CoreMap sentence){
         List<String> namedEntities;
         Sentence s = new Sentence(sentence);
         namedEntities = s.mentions("PERSON");
@@ -166,27 +147,6 @@ public class NLPPipeline {
             }
             ps.print(s);
         }
-    }
-
-    public int findClosingParen(char[] text, int openPos) {
-        int closePos = openPos;
-        int counter = 1;
-        while (counter > 0) {
-            char c = text[++closePos];
-            if (c == '(') {
-                counter++;
-            }
-            else if (c == ')') {
-                counter--;
-            }
-        }
-        return closePos;
-    }
-    public String prunetree (Tree tree){
-        String sentence = tree.toString();
-        int index = sentence.indexOf("WHNP");
-        ps.print(index);
-        return sentence;
     }
 
 }
