@@ -6,13 +6,13 @@ import java.util.List;
 /**
  * Created by Gabriela on 28-Jun-17.
  */
-public class entityNode {
+public class oldEntityNode {
     private String nodeName = "";
     private List<nodeConnection> connections = new ArrayList<>();
     private String entityType = "";
     private int connectionNumber = 0;
 
-    public entityNode createNode(String s, List<nodeConnection> cons){
+    public oldEntityNode createNode(String s, List<nodeConnection> cons){
         nodeName+= s;
         return this;
     }

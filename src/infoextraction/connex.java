@@ -20,6 +20,7 @@ public class connex {
         return date;
     }
 
+
     public void setConnection(int first, int second, String date){
         this.first = first;
         this.second = second;
@@ -31,6 +32,12 @@ public class connex {
             if (date.equals(this.date)){
                 return true;
             }
+        }
+        return false;
+    }
+    public boolean hasNode(int i){
+        if(first == i || second == i){
+            return true;
         }
         return false;
     }

@@ -4,68 +4,147 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Gabriela on 28-Jun-17.
+ * Created by Gabriela on 24-Jul-17.
  */
 public class networkComparator {
-    private networkTemplate idealNetwork = new networkTemplate();
-    private networkTemplate testNetwork = new networkTemplate();
-    private List<String> scoreList =new ArrayList<>();
-    private int score;
+    private netTemplate ideal = new netTemplate();
+    private netTemplate tocompare = new netTemplate();
+    private int alpha;
+    private int beta;
+    private int gamma;
+    List<Integer> scores = new ArrayList<Integer>();
 
-    public void setTestNetwork (networkTemplate net){
-        testNetwork = net;
+
+    public networkComparator(int a, int b, int c, netTemplate ideal, netTemplate tocompare){
+        this.alpha = a;
+        this.beta = b;
+        this.gamma = c;
+        this.ideal = ideal;
+        this.tocompare = tocompare;
     }
-    public void setIdealNetwork (networkTemplate net){
-        idealNetwork = net;
+    public void setAlpha(int alpha) {
+        this.alpha = alpha;
+    }
+
+    public void setBeta(int beta) {
+        this.beta = beta;
+    }
+
+    public void setGamma(int gamma) {
+        this.gamma = gamma;
+    }
+
+    public void setIdeal(netTemplate ideal) {
+        this.ideal = ideal;
+    }
+
+    public void setTocompare(netTemplate tocompare) {
+        this.tocompare = tocompare;
     }
 
 
-    public void compareNetworks(){
-        List<entityNode> idealNodes = testNetwork.getNodes();
-        entityNode test = new entityNode();
-        for (entityNode ideal : idealNodes){
-            if ((test = testNetwork.getNodeByName(ideal.getNodeName()) )!= null ){
-                scoreList.add(Double.toString(compareNodes(ideal, test)));
-            }
-            else {
-                scoreList.add(Double.toString(0.0) );
-            }
+
+    private float calculatePositiveScore() {
+        getTruePositivesNodes();
+        return addScore() / scores.size();
+    }
 
 
+
+
+    private int addScore() {
+        int sum = 0;
+        for (int i : scores) {
+            sum += i;
+        }
+        return sum;
+    }
+
+    private void getTruePositivesNodes() {
+        int i = 0;
+        for (String s : ideal.getNodes()) {
+            i = 0;
+            if (tocompare.hasNode(s)) {
+                i += alpha;
+                List<conTemplate> conToCompare = tocompare.getNodeConnections(s);
+                List<conTemplate> idealcon = ideal.getNodeConnections(s);
+                i += compareConnections(idealcon, conToCompare);
+            } else {
+                i = 0;
+            }
+            scores.add(i);
         }
     }
-    private double compareNodes(entityNode ideal, entityNode test){
-        double nodeScore = 0.5; //Node gets half a point if the node exists
-        nodeScore += compareConnections(ideal,test);
-        return nodeScore;
 
-    }
-    private double compareConnections(entityNode ideal, entityNode test){
-        double score = 0;
-        double finalscore = 0;
-        double idealnumber = (double)ideal.getConnectionNumber();
-        List<nodeConnection> idealcon = ideal.getConnections();
-        List<nodeConnection> testcon = test.getConnections();
-        for (nodeConnection con: idealcon){
-            if( test.searchConnectionByConnectingEntity(con.getConnectingNodeName())){
-                score++;
+    private int compareConnections(List<conTemplate> id, List<conTemplate> tocomp) {
+        int foundCon = 0;
+        int idealCon = 0;
+        int date = 0;
+        int result =0;
+        for (conTemplate ideal : id) {
+            idealCon++;
+            for (conTemplate comparing : tocomp) {
+                if (sameConnection(ideal, comparing) == 1) {
+                    foundCon++;
+                } else if (sameConnection(ideal, comparing) == 2) {
+                    foundCon++;
+                    date++;
+                }
             }
         }
-        if( idealnumber == 0) {
-            if(score == 0){
-                finalscore = 0.5;
-            }
-//            For now if a node ideally has 0 connections and the test has more than 0,
-//            the test gets 0 points
-            else {
-                finalscore = 0;
-            }
+        if(idealCon != 0 ){
+
+            result = foundCon / idealCon * beta + date * gamma;
         }
         else{
-            finalscore = 0.5* (score/idealnumber);
+            result = beta + gamma;
         }
 
-        return finalscore;
+
+        return result;
     }
 
+    private int sameConnection(conTemplate ideal, conTemplate tocomp) {
+        int i = 0;
+        if ((ideal.getNode1().equals(tocomp.getNode1()) && (ideal.getNode2().equals(tocomp.getNode2())))) i = 1;
+        if ((ideal.getNode2().equals(tocomp.getNode1()) && (ideal.getNode1().equals(tocomp.getNode2())))) i = 1;
+        if (i == 1) {
+            if (ideal.getDate().equals(tocomp.getDate())) i++;
+        }
+        return i;
+    }
+
+
+    private void getTrueFalsePositiveRatio() {
+        int falseNodes = 0;
+        int trueNodes = 0;
+
+        List<String> idealNodes = ideal.getNodes();
+        for (String s : tocompare.getNodes()) {
+            if (!idealNodes.contains(s)) {
+                falseNodes++;
+            }
+            else{
+                trueNodes++;
+            }
+        }
+        System.out.println(trueNodes/ideal.getNodes().size());
+        System.out.println(trueNodes/tocompare.getNodes().size());
+
+    }
+
+    public static void main(String[] args) {
+        netTemplate ideal = new netTemplate();
+        ideal.addNode("libor");
+        ideal.addNode("boe");
+        ideal.addConnection("libor","boe","2007");
+        netTemplate net = new netTemplate();
+        net.addNode("libor");
+        net.addNode("boe");
+        net.addNode("ba");
+
+        networkComparator nC = new networkComparator(60,30,10,ideal,net);
+        System.out.println(nC.calculatePositiveScore());
+
+    }
 }

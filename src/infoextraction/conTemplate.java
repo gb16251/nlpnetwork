@@ -24,4 +24,20 @@ public class conTemplate {
     public String getNode2() {
         return node2;
     }
+
+    public boolean hasNode(String s){
+        if (node1.equals(s) || node2.equals(s))return true;
+        return false;
+    }
+    public void printTemplate(){
+        System.out.print(node1);
+        System.out.print(" ");
+
+        System.out.print(node2);
+        System.out.print(" ");
+
+        System.out.println(date);
+
+
+    }
 }
