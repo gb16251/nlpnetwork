@@ -44,12 +44,10 @@ public class networkComparator {
 
 
 
-    private float calculatePositiveScore() {
+    public float calculatePositiveScore() {
         getTruePositivesNodes();
         return addScore() / scores.size();
     }
-
-
 
 
     private int addScore() {
@@ -72,6 +70,7 @@ public class networkComparator {
             } else {
                 i = 0;
             }
+
             scores.add(i);
         }
     }
@@ -93,14 +92,11 @@ public class networkComparator {
             }
         }
         if(idealCon != 0 ){
-
-            result = foundCon / idealCon * beta + date * gamma;
+            result = (foundCon / idealCon) * beta + (date/idealCon) * gamma;
         }
         else{
             result = beta + gamma;
         }
-
-
         return result;
     }
 
@@ -132,19 +128,34 @@ public class networkComparator {
         System.out.println(trueNodes/tocompare.getNodes().size());
 
     }
+    public void printAllScores(){
+        System.out.print("Number of scores:");
+        System.out.println(scores.size());
+        for (int i: scores){
+            System. out.print(i);
+            System. out.print(" ");
+        }
+        System. out.println();
+
+
+    }
 
     public static void main(String[] args) {
-        netTemplate ideal = new netTemplate();
-        ideal.addNode("libor");
-        ideal.addNode("boe");
-        ideal.addConnection("libor","boe","2007");
+        testOneNetwork one = new testOneNetwork();
+        netTemplate ideal = one.getnT();
         netTemplate net = new netTemplate();
-        net.addNode("libor");
-        net.addNode("boe");
-        net.addNode("ba");
 
-        networkComparator nC = new networkComparator(60,30,10,ideal,net);
-        System.out.println(nC.calculatePositiveScore());
+//        ideal.addNode("libor");
+//        ideal.addNode("boe");
+//        ideal.addConnection("libor","boe","2007");
+//        net.addNode("libor");
+//        net.addNode("boe");
+//        net.addNode("ba");
+//
+//        networkComparator nC = new networkComparator(60,30,10,ideal,net);
+//        System.out.println(nC.calculatePositiveScore());
+
+
 
     }
 }

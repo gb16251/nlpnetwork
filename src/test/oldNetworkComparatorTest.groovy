@@ -5,6 +5,7 @@ package test
  */
 class oldNetworkComparatorTest extends GroovyTestCase {
     void testSetTestNetwork() {
+
     }
 
     void testSetIdealNetwork() {

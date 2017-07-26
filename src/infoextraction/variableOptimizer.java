@@ -8,6 +8,10 @@ import java.util.List;
  */
 public class variableOptimizer {
     List <variableTriples> vt = new ArrayList<>();
+
+    public variableOptimizer(){
+        optimize();
+    }
     public void optimize(){
         for (int i = 0; i<= 100;i++){
             for (int j = 100 - i;j>=0;j--){

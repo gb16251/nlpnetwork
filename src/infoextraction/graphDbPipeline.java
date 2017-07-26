@@ -16,7 +16,7 @@ import java.io.IOException;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "tri5/neo4j-store" );
+    private static final File DB_PATH = new File( "tri6/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -83,7 +83,7 @@ public class graphDbPipeline {
                 rel.setProperty("matches", "1");
             }
             else {
-                System.out.println("I'm here now");
+//                System.out.println("I'm here now");
 
             }
             tx.success();
@@ -93,7 +93,6 @@ public class graphDbPipeline {
     private boolean increaseMatches (Node first, Node second){
         for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
             if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
-                System.out.println("I'm here");
                 r.setProperty("matches", increaseString(r.getProperty("matches").toString()));
                 System.out.println(r.getProperty("matches").toString());
                 return true;
@@ -105,7 +104,6 @@ public class graphDbPipeline {
     private String increaseString(String s){
         int i = Integer.parseInt(s);
         i++;
-        System.out.println(i);
         return Integer.toString(i);
     }
 

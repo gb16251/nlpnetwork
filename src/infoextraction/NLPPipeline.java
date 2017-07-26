@@ -56,13 +56,34 @@ public class NLPPipeline {
 
     public void getAnnotations (List<CoreMap> sentences) {
         netTemplate network = new netTemplate();
+        testOneNetwork one = new testOneNetwork();
+        variableOptimizer vO = new variableOptimizer();
+        netTemplate ideal = one.getnT();
         for (CoreMap sentence : sentences) {
               network = createPairs(addEntitiesToTemplate(sentence),getTimeStamps(sentence),network);
         }
-        for (conTemplate con: network.getConnections()){
-            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
-        }
+//        for (conTemplate con: network.getConnections()){
+//            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
+//        }
+        System.out.println("Generated network: ");
         network.printNetwork();
+
+//        for (variableTriples var:vO.vt){
+//            var.printTriples();
+//            networkComparator nC = new networkComparator(var.getA(),var.getB(),var.getC(),ideal,network);
+//            System.out.println(nC.calculatePositiveScore());
+//            System.out.println();
+//
+//        }
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+
+        System.out.println("Ideal network: ");
+        ideal.printNetwork();
+
+
     }
 //    Add to test structures - no relations, just enttiies
     public List<String> addEntitiesToTemplate(CoreMap sentence){
