@@ -9,6 +9,7 @@ import java.util.List;
 public class variableOptimizer {
     List <variableTriples> vt = new ArrayList<>();
 
+
     public variableOptimizer(){
         optimize();
     }

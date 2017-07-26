@@ -6,6 +6,8 @@ import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.util.CoreMap;
+import evaluationVisualtizer.charts;
+import javafx.application.Application;
 
 
 import java.io.IOException;
@@ -13,8 +15,11 @@ import java.io.PrintStream;
 import java.util.*;
 
 public class NLPPipeline {
-    PrintStream ps = new PrintStream(System.out);
-    graphDbPipeline database = new graphDbPipeline();
+    private PrintStream ps = new PrintStream(System.out);
+    private graphDbPipeline database = new graphDbPipeline();
+    private netTemplate network = new netTemplate();
+
+
 
 
     private void startDB(){
@@ -53,36 +58,35 @@ public class NLPPipeline {
     }
 
 
-
     public void getAnnotations (List<CoreMap> sentences) {
-        netTemplate network = new netTemplate();
-        testOneNetwork one = new testOneNetwork();
-        variableOptimizer vO = new variableOptimizer();
-        netTemplate ideal = one.getnT();
         for (CoreMap sentence : sentences) {
               network = createPairs(addEntitiesToTemplate(sentence),getTimeStamps(sentence),network);
         }
-//        for (conTemplate con: network.getConnections()){
-//            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
-//        }
-        System.out.println("Generated network: ");
-        network.printNetwork();
+    }
 
-//        for (variableTriples var:vO.vt){
-//            var.printTriples();
-//            networkComparator nC = new networkComparator(var.getA(),var.getB(),var.getC(),ideal,network);
-//            System.out.println(nC.calculatePositiveScore());
-//            System.out.println();
-//
-//        }
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        System.out.println();
+    public int[] evalNetwork(){
+        testOneNetwork one = new testOneNetwork();
+        netTemplate ideal = one.getnT();
 
-        System.out.println("Ideal network: ");
-        ideal.printNetwork();
+        variableOptimizer vO = new variableOptimizer();
+        averageCalculator alpha = new averageCalculator();
+        averageCalculator beta = new averageCalculator();
+        averageCalculator gamma = new averageCalculator();
 
+        for (variableTriples var:vO.vt){
+            networkComparator nC = new networkComparator(var.getA(),var.getB(),var.getC(),ideal,network);
+            alpha.addItem(var.getA(),(int)nC.calculatePositiveScore());
+            beta.addItem(var.getB(),(int)nC.calculatePositiveScore());
+            gamma.addItem(var.getC(),(int)nC.calculatePositiveScore());
+            System.out.println();
+        }
+        return beta.getResults();
+    }
+
+    public void insertToDatabase(netTemplate network ){
+        for (conTemplate con: network.getConnections()){
+            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
+        }
 
     }
 //    Add to test structures - no relations, just enttiies
