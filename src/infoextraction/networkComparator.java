@@ -22,27 +22,6 @@ public class networkComparator {
         this.ideal = ideal;
         this.tocompare = tocompare;
     }
-    public void setAlpha(int alpha) {
-        this.alpha = alpha;
-    }
-
-    public void setBeta(int beta) {
-        this.beta = beta;
-    }
-
-    public void setGamma(int gamma) {
-        this.gamma = gamma;
-    }
-
-    public void setIdeal(netTemplate ideal) {
-        this.ideal = ideal;
-    }
-
-    public void setTocompare(netTemplate tocompare) {
-        this.tocompare = tocompare;
-    }
-
-
 
     public float calculatePositiveScore() {
         getTruePositivesNodes();
@@ -91,13 +70,15 @@ public class networkComparator {
                 }
             }
         }
+
         if(idealCon != 0 ){
-            result = (foundCon / idealCon) * beta + (date/idealCon) * gamma;
+            float res = ((float)foundCon / (float)idealCon) * (float)beta + ((float)date/(float)idealCon) * (float)gamma;
+            result = Math.round(res);
         }
         else{
             result = beta + gamma;
         }
-        return result;
+        return result ;
     }
 
     private int sameConnection(conTemplate ideal, conTemplate tocomp) {
@@ -105,7 +86,7 @@ public class networkComparator {
         if ((ideal.getNode1().equals(tocomp.getNode1()) && (ideal.getNode2().equals(tocomp.getNode2())))) i = 1;
         if ((ideal.getNode2().equals(tocomp.getNode1()) && (ideal.getNode1().equals(tocomp.getNode2())))) i = 1;
         if (i == 1) {
-            if (ideal.getDate().equals(tocomp.getDate())) i++;
+            if (ideal.getDate().toLowerCase().equals(tocomp.getDate().toLowerCase())) i++;
         }
         return i;
     }
@@ -140,22 +121,4 @@ public class networkComparator {
 
     }
 
-    public static void main(String[] args) {
-        testOneNetwork one = new testOneNetwork();
-        netTemplate ideal = one.getnT();
-        netTemplate net = new netTemplate();
-
-//        ideal.addNode("libor");
-//        ideal.addNode("boe");
-//        ideal.addConnection("libor","boe","2007");
-//        net.addNode("libor");
-//        net.addNode("boe");
-//        net.addNode("ba");
-//
-//        networkComparator nC = new networkComparator(60,30,10,ideal,net);
-//        System.out.println(nC.calculatePositiveScore());
-
-
-
-    }
 }

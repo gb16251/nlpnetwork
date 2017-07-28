@@ -64,23 +64,39 @@ public class NLPPipeline {
         }
     }
 
+    public void getAnnotationsTwo (List<CoreMap> sentences) {
+        for (CoreMap sentence : sentences) {
+            network = createPairs(addEntitiesToTemplate(sentence),null,network);
+        }
+    }
+
+    public void getAnnotationsOne (List<CoreMap> sentences) {
+        for (CoreMap sentence : sentences) {
+            for (String s: getNamedEntities(sentence)) {
+                network.addNode(s);
+            }
+        }
+    }
+
     public int[] evalNetwork(){
         testOneNetwork one = new testOneNetwork();
         netTemplate ideal = one.getnT();
+        calculatePreRec F1 = new calculatePreRec(ideal,network);
+        System.out.print("F1 score: ");
+        System.out.println(F1.getF1());
 
         variableOptimizer vO = new variableOptimizer();
         averageCalculator alpha = new averageCalculator();
         averageCalculator beta = new averageCalculator();
         averageCalculator gamma = new averageCalculator();
 
-        for (variableTriples var:vO.vt){
+        for (variableTriples var:vO.getVt()){
             networkComparator nC = new networkComparator(var.getA(),var.getB(),var.getC(),ideal,network);
             alpha.addItem(var.getA(),(int)nC.calculatePositiveScore());
             beta.addItem(var.getB(),(int)nC.calculatePositiveScore());
             gamma.addItem(var.getC(),(int)nC.calculatePositiveScore());
-            System.out.println();
         }
-        return beta.getResults();
+        return alpha.getResults();
     }
 
     public void insertToDatabase(netTemplate network ){
@@ -89,7 +105,7 @@ public class NLPPipeline {
         }
 
     }
-//    Add to test structures - no relations, just enttiies
+//    Add to tests structures - no relations, just enttiies
     public List<String> addEntitiesToTemplate(CoreMap sentence){
         List<String> ents = new ArrayList<>();
         for (String s: getNamedEntities(sentence)){

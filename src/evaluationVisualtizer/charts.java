@@ -3,7 +3,6 @@ package evaluationVisualtizer; /**
  */
 
 import infoextraction.NLPPipeline;
-import infoextraction.variableOptimizer;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -11,25 +10,24 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.stage.Stage;
 
-import java.util.List;
-
 public class charts extends Application {
 
 
     @Override public void start(Stage stage) {
-        stage.setTitle("Line Chart Sample");
+        stage.setTitle("Optimization");
         //defining the axes
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Number of Month");
+        xAxis.setLabel("Beta Value");
+        yAxis.setLabel("Average score");
         //creating the chart
         final LineChart<Number,Number> lineChart =
                 new LineChart<Number,Number>(xAxis,yAxis);
 
-        lineChart.setTitle("Stock Monitoring, 2010");
+        lineChart.setTitle("Evaluation Stage: 1");
         //defining a series
         XYChart.Series series = new XYChart.Series();
-        series.setName("My portfolio");
+        series.setName("Evaluation template");
         //populating the series with data
         NLPPipeline pipe = new NLPPipeline();
         pipe.startPipeLine();

@@ -7,8 +7,11 @@ import java.util.List;
  * Created by Gabriela on 19-Jul-17.
  */
 public class variableOptimizer {
-    List <variableTriples> vt = new ArrayList<>();
+    private List <variableTriples> vt = new ArrayList<>();
 
+    public List<variableTriples> getVt() {
+        return vt;
+    }
 
     public variableOptimizer(){
         optimize();
@@ -24,9 +27,6 @@ public class variableOptimizer {
     public static void main(String[] args) {
         variableOptimizer vo = new variableOptimizer();
         vo.optimize();
-        for (variableTriples t: vo.vt){
-            t.printTriples();
-        }
     }
 
 }

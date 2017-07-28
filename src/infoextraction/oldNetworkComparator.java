@@ -55,8 +55,8 @@ public class oldNetworkComparator {
             if(score == 0){
                 finalscore = 0.5;
             }
-//            For now if a node ideally has 0 connections and the test has more than 0,
-//            the test gets 0 points
+//            For now if a node ideally has 0 connections and the tests has more than 0,
+//            the tests gets 0 points
             else {
                 finalscore = 0;
             }

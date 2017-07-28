@@ -36,10 +36,12 @@ public class dateChecker {
     private List<String> processString(String words[]) {
         List<String> validDates = new ArrayList<>();
         for (int i = 0; i < words.length; i++) {
-            if (isMonth(words[i])) {
-                validDates.add(words[i]);
-            } else if (isYear(words[i])) {
-                validDates.add(words[i]);
+            if(!words[i].equals("")) {
+                if (isMonth(words[i])) {
+                    validDates.add(words[i]);
+                } else if (isYear(words[i])) {
+                    validDates.add(words[i]);
+                }
             }
         }
         return validDates;
@@ -76,18 +78,5 @@ public class dateChecker {
             }
         }
         return true;
-    }
-
-    public static void main(String[] args) {
-        dateChecker date = new dateChecker();
-        List <String> trueDates = new ArrayList<>();
-        trueDates.addAll( date.checkDates("2019"));
-        trueDates.addAll( date.checkDates("2018 and 2017"));
-        trueDates.addAll( date.checkDates("July 2020"));
-        trueDates.addAll( date.checkDates("March"));
-        trueDates.addAll( date.checkDates("9"));
-        for (String s: trueDates){
-            System.out.println(s);
-        }
     }
 }
