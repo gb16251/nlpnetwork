@@ -2,6 +2,7 @@ package infoextraction; /**
  * Created by Gabriela on 14-Jun-17.
  */
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.*;
@@ -18,6 +19,7 @@ public class NLPPipeline {
     private PrintStream ps = new PrintStream(System.out);
     private graphDbPipeline database = new graphDbPipeline();
     private netTemplate network = new netTemplate();
+    private coreferenceResolution corefResolution;
 
 
 
@@ -31,7 +33,7 @@ public class NLPPipeline {
 
     public static void main(String[] args) {
         NLPPipeline pipe = new NLPPipeline();
-        pipe.startDB();
+//        pipe.startDB();
         pipe.startPipeLine();
 
     }
@@ -39,7 +41,7 @@ public class NLPPipeline {
     public void startPipeLine(){
         openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         List<String> texts = filestream.getText();
         for (String text : texts){
@@ -54,11 +56,28 @@ public class NLPPipeline {
         // run all Annotators on this text
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        getAnnotations(sentences);
+        corefResolution = new coreferenceResolution(document);
+        getAnnotationsThree(sentences);
+    }
+
+    public void getAnnotations (List<CoreMap> sentences) {
+        for (CoreMap sentence : sentences) {
+            List <String> entitiesList = new ArrayList<>();
+            entitiesList.addAll(addEntitiesToTemplate(sentence));
+            for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                CoreLabel word = new CoreLabel(token);
+                referenceRecorder ref = new referenceRecorder(word.word(),word.sentIndex());
+                String poss = corefResolution.checkNERAssociation(ref);
+                if(poss!=null){
+                    entitiesList.add(poss);
+                }
+            }
+            network = createPairs(entitiesList,getTimeStamps(sentence),network);
+        }
     }
 
 
-    public void getAnnotations (List<CoreMap> sentences) {
+    public void getAnnotationsThree (List<CoreMap> sentences) {
         for (CoreMap sentence : sentences) {
               network = createPairs(addEntitiesToTemplate(sentence),getTimeStamps(sentence),network);
         }
@@ -95,8 +114,14 @@ public class NLPPipeline {
             alpha.addItem(var.getA(),(int)nC.calculatePositiveScore());
             beta.addItem(var.getB(),(int)nC.calculatePositiveScore());
             gamma.addItem(var.getC(),(int)nC.calculatePositiveScore());
+//            System.out.print(var.getA());System.out.print(" ");
+//            System.out.print(var.getB());System.out.print(" ");
+//            System.out.print(var.getC());System.out.println(" ");
+//
+//            nC.printAllScores();
+
         }
-        return alpha.getResults();
+        return gamma.getResults();
     }
 
     public void insertToDatabase(netTemplate network ){
@@ -115,10 +140,11 @@ public class NLPPipeline {
     }
 
     private netTemplate createPairs (List<String> ents, List<String> date,netTemplate net) {
-        for (String s1:ents){
-            for (int i = s1.indexOf(s1) + 1; i< ents.size();i++){
-                net.addConnection(s1,ents.get(i),listToString(date));
+        for (String s1:ents) {
+            for (int i = s1.indexOf(s1) + 1; i < ents.size(); i++) {
+                net.addConnection(s1, ents.get(i), listToString(date));
             }
+
         }
         return net;
     }
@@ -134,11 +160,32 @@ public class NLPPipeline {
     }
 
     public List<String> getNamedEntities(CoreMap sentence){
-        List<String> namedEntities;
+        List<String> namedEntities = new ArrayList<>();
         Sentence s = new Sentence(sentence);
-        namedEntities = s.mentions("PERSON");
+        namedEntities.addAll(s.mentions("PERSON"));
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
+        manageNamedEntities(namedEntities,s.sentenceIndex());
+        return namedEntities;
+    }
+
+    private List<String> manageNamedEntities(List<String> namedEntities,int index){
+        List <String> toDelete = new ArrayList<>();
+        List <String> toAdd = new ArrayList<>();
+        for (String s: namedEntities){
+            referenceRecorder ref = new referenceRecorder(s,index);
+            String original = corefResolution.checkNERAssociation(ref);
+            if(original!=null){
+                toDelete.add(s);
+                toAdd.add(original);
+            }
+            else if (corefResolution.checkIfExists(s)!= null){
+                    toDelete.add(s);
+                    toAdd.add(corefResolution.checkIfExists(s));
+            }
+        }
+        namedEntities.removeAll(toDelete);
+        namedEntities.addAll(toAdd);
         return namedEntities;
     }
     public List<String> getTimeStamps(CoreMap sentence ) {

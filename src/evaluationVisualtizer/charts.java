@@ -18,7 +18,7 @@ public class charts extends Application {
         //defining the axes
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Beta Value");
+        xAxis.setLabel("Gamma Value");
         yAxis.setLabel("Average score");
         //creating the chart
         final LineChart<Number,Number> lineChart =
@@ -34,7 +34,6 @@ public class charts extends Application {
         int[] results =  pipe.evalNetwork();
         for (int i = 0; i<=100;i++){
             series.getData().add(new XYChart.Data(i,results[i]));
-
         }
 
         Scene scene  = new Scene(lineChart,800,600);

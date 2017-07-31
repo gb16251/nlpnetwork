@@ -61,24 +61,29 @@ public class networkComparator {
         int result =0;
         for (conTemplate ideal : id) {
             idealCon++;
-            for (conTemplate comparing : tocomp) {
-                if (sameConnection(ideal, comparing) == 1) {
+            for (conTemplate comp: tocomp){
+                if (sameConnection(ideal, comp) == 1) {
                     foundCon++;
-                } else if (sameConnection(ideal, comparing) == 2) {
+                } else if (sameConnection(ideal,comp) == 2) {
                     foundCon++;
                     date++;
                 }
             }
         }
-
         if(idealCon != 0 ){
-            float res = ((float)foundCon / (float)idealCon) * (float)beta + ((float)date/(float)idealCon) * (float)gamma;
+            float res = getMin(foundCon,idealCon)* (float)beta + ((float)date/(float)idealCon) * (float)gamma;
             result = Math.round(res);
         }
         else{
             result = beta + gamma;
         }
         return result ;
+    }
+
+    private float getMin(int foundCon, int idealCon){
+        if(foundCon>idealCon) return 1;
+        return (float)foundCon / (float)idealCon;
+
     }
 
     private int sameConnection(conTemplate ideal, conTemplate tocomp) {
@@ -117,7 +122,6 @@ public class networkComparator {
             System. out.print(" ");
         }
         System. out.println();
-
 
     }
 

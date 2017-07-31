@@ -53,7 +53,7 @@ public class testOneNetwork {
         nT.addConnection("Bank of England","Barclays","October 2008");
         nT.addConnection("Bank of England","Bob Diamond","October 2008");
         nT.addConnection("Barclays","Bob Diamond","October 2008");
-        nT.addConnection("Chris Philp","Treasury","October 2008");
+        nT.addConnection("Chris Philip","Treasury","October 2008");
 
 
         nT.addConnection("Paul Tucker","Bob Diamond","2012");

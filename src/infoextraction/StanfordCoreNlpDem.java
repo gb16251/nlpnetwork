@@ -95,11 +95,9 @@ public class StanfordCoreNlpDem {
           out.print("Reprjf mention: ");
           out.println(repr.mentionSpan);
           out.println("--");
-        referenceRecorder mapTo = new referenceRecorder();
-        mapTo.setIndexes(repr.startIndex,repr.endIndex,repr.sentNum); mapTo.setReference(repr.mentionSpan);
+        referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum);
         for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder()) {
-          referenceRecorder key = new referenceRecorder();
-          key.setIndexes(m.startIndex, m.endIndex,repr.sentNum); key.setReference(m.mentionSpan);
+          referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum);
           key.printValues();
           corefs.put(key,mapTo);
           // We need to subtract one since the indices count from 1 but the Lists start from 0

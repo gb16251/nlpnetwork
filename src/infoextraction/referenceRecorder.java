@@ -10,10 +10,10 @@ public class referenceRecorder {
     private int sentence;
 
 
-    public void setReference(String ref){ reference +=ref;}
-    public void setIndexes (int start, int end, int sent){
-        startIndex = start;
-        endIndex = end;
+    public referenceRecorder(String ref, int sent){
+        reference +=ref;
+//        startIndex = start;
+//        endIndex = end;
         sentence = sent;
     }
     public String getReference() {return reference;}
