@@ -37,6 +37,7 @@ public class calculatePreRec {
             }
             else {
                 falseNeg++;
+                System.out.println(s);
             }
         }
     }

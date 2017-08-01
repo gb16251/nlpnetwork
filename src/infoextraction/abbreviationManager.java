@@ -5,6 +5,11 @@ package infoextraction;
  */
 public class abbreviationManager {
 
+    public String splitString(String s){
+        if (s.contains(" ") && !s.contains(".")) return splitOnSpace(s);
+        if(s.contains(".") && !s.contains(" ")) return splitOnPeriod(s);
+        return null;
+    }
     //    Obtains the abbreviation of a string of words
     public String splitOnSpace(String s) {
         String[] words = s.split(" ");
@@ -57,9 +62,19 @@ public class abbreviationManager {
 
 
     public static void main(String[] args) {
+
         abbreviationManager am = new abbreviationManager();
-        System.out.println(am.splitOnSpace("United States Of America"));
-        System.out.println(am.splitOnPeriod("U.S.A."));
-        System.out.println(am.computeLevenshteinDistance("USA","USA"));
+        System.out.println(am.splitString("march"));
+        System.out.println(am.splitString("march."));
+        System.out.println(am.splitString("ma rch."));
+        System.out.println(am.splitString("m.a.r.c.h"));
+        System.out.println(am.splitString("m a r c h"));
+        System.out.println(am.splitString("Serious Fraud Office"));
+
+
+
+//        System.out.println(am.splitOnSpace("United States Of America"));
+//        System.out.println(am.splitOnPeriod("U.S.A."));
+//        System.out.println(am.computeLevenshteinDistance("USA","USA"));
     }
 }

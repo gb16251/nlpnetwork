@@ -22,8 +22,6 @@ public class NLPPipeline {
     private coreferenceResolution corefResolution;
 
 
-
-
     private void startDB(){
         try {
            database.initializeGraphDB();
@@ -35,7 +33,6 @@ public class NLPPipeline {
         NLPPipeline pipe = new NLPPipeline();
 //        pipe.startDB();
         pipe.startPipeLine();
-
     }
 
     public void startPipeLine(){
@@ -43,9 +40,12 @@ public class NLPPipeline {
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        List<String> texts = filestream.getText();
-        for (String text : texts){
-            processText(text,pipeline);
+        List<String> texts = new ArrayList<>();
+        List <fileRecorder> fileRec = filestream.getText();
+        //        List<String> texts = filestream.getText();
+
+        for (fileRecorder file : fileRec){
+            processText(file.getFileOutput(),pipeline);
         }
 
     }
@@ -57,7 +57,8 @@ public class NLPPipeline {
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document);
-        getAnnotationsThree(sentences);
+        getAnnotations(sentences);
+//        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences) {
@@ -74,6 +75,7 @@ public class NLPPipeline {
             }
             network = createPairs(entitiesList,getTimeStamps(sentence),network);
         }
+//        network.printNetwork();
     }
 
 
@@ -121,7 +123,7 @@ public class NLPPipeline {
 //            nC.printAllScores();
 
         }
-        return gamma.getResults();
+        return alpha.getResults();
     }
 
     public void insertToDatabase(netTemplate network ){
@@ -141,10 +143,12 @@ public class NLPPipeline {
 
     private netTemplate createPairs (List<String> ents, List<String> date,netTemplate net) {
         for (String s1:ents) {
-            for (int i = s1.indexOf(s1) + 1; i < ents.size(); i++) {
+//            System.out.println(s1);
+            for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
+//                ps.print(s1);ps.print(" ");ps.print(ents.get(i));
+//                ps.println(i);
                 net.addConnection(s1, ents.get(i), listToString(date));
             }
-
         }
         return net;
     }
@@ -165,7 +169,8 @@ public class NLPPipeline {
         namedEntities.addAll(s.mentions("PERSON"));
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
-        manageNamedEntities(namedEntities,s.sentenceIndex());
+        namedEntities = manageNamedEntities(namedEntities,s.sentenceIndex());
+
         return namedEntities;
     }
 
@@ -179,10 +184,15 @@ public class NLPPipeline {
                 toDelete.add(s);
                 toAdd.add(original);
             }
-            else if (corefResolution.checkIfExists(s)!= null){
-                    toDelete.add(s);
-                    toAdd.add(corefResolution.checkIfExists(s));
+            else if (corefResolution.isAbbrev(s)!=null){
+                toDelete.add(s);
+                toAdd.add(corefResolution.isAbbrev(s));
             }
+            else if (corefResolution.checkIfExists(s)!= null){
+                toDelete.add(s);
+                toAdd.add(corefResolution.checkIfExists(s));
+            }
+
         }
         namedEntities.removeAll(toDelete);
         namedEntities.addAll(toAdd);

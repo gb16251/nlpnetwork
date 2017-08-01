@@ -30,15 +30,18 @@ public class openFiles {
         return results;
     }
 
-    public List<String> getText(){
+    public List<fileRecorder> getText(){
         List <String> results = getFiles();
         List <String> fileOutputs = new ArrayList<>();
+        List<fileRecorder> fileRec= new ArrayList<>();
 
         for (String file: results){
             fileOutputs.add(readFile(file));
+            fileRec.add(new fileRecorder(file, readFile(file)));
         }
 //        for (String s : fileOutputs){ ps.println(s);}
-        return fileOutputs;
+
+        return fileRec;
     }
 
 //    Return a string for each file

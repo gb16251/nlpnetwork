@@ -51,9 +51,13 @@ public class netTemplate {
     }
 
     public void addConnection(String first, String second, String date){
+        if (first.equals("") ||  second.equals("")){
+            return;
+        }
         if(!first.equals(second)) {
             addIndices(manageNode(first), manageNode(second), date);
         }
+
     }
 
     private int manageNode(String s){

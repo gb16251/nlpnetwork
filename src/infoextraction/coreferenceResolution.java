@@ -16,11 +16,22 @@ import java.util.*;
  * Created by Gabriela on 07-Jul-17.
  */
 public class coreferenceResolution {
-    PrintWriter out = new PrintWriter(System.out);
+    private PrintWriter out = new PrintWriter(System.out);
     private HashMap<referenceRecorder,referenceRecorder> corefs = new HashMap<>();
     private Annotation annotation;
     private List<String> allEntities = new ArrayList<>();
+    private List<String> allEntitiesAbbreviations = new ArrayList<>();
 
+
+
+    public String isAbbrev(String s){
+        if(s.toUpperCase().equals(s)) {
+            if (allEntitiesAbbreviations.contains(s)) {
+                return allEntities.get(allEntitiesAbbreviations.indexOf(s));
+            }
+        }
+        return null;
+    }
 
 
     public String checkIfExists(String s){
@@ -36,7 +47,6 @@ public class coreferenceResolution {
     public coreferenceResolution(Annotation annotation){
         this.annotation = annotation;
         getChains();
-        for (String s: allEntities) {System.out.print(s); System.out.print(" ");}
     }
 
     public String checkNERAssociation(referenceRecorder key){
@@ -72,11 +82,17 @@ public class coreferenceResolution {
         return annotation;
     }
 
-
+    private void getAbbreviations(){
+        abbreviationManager aManage = new abbreviationManager();
+        for(String entity: allEntities){
+            allEntitiesAbbreviations.add(aManage.splitString(entity));
+        }
+    }
     public void getChains() {
 //        Annotation annotation = annotateSentence(s);
         List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
         getNamedEntities(sentences);
+        getAbbreviations();
         if (sentences != null && !sentences.isEmpty()) {
             Map<Integer, CorefChain> corefChains =
                     annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);

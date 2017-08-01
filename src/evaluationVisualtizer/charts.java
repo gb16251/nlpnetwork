@@ -38,7 +38,6 @@ public class charts extends Application {
 
         Scene scene  = new Scene(lineChart,800,600);
         lineChart.getData().add(series);
-
         stage.setScene(scene);
         stage.show();
     }

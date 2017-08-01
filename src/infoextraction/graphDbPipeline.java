@@ -16,14 +16,14 @@ import java.io.IOException;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "tri6/neo4j-store" );
+    private static final File DB_PATH = new File( "tri7/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
     IndexHits<Relationship> timeRelationships;
     public enum RelTypes implements RelationshipType
     {
-        UNKNOWN,
+        DATE,
         LOCATED_IN,
         MATCHES
     }
@@ -55,11 +55,16 @@ public class graphDbPipeline {
     public void addBasicConnection(String ent1, String ent2,String date){
         Node first;
         Node second;
+//        System.out.println("I'm adding a basic connection");
 
         if((first = searchNodeByName(ent1)) == null) {
             first = addNode(ent1);
+//            System.out.println("I'm adding a node");
+
         }
         if((second = searchNodeByName(ent2)) == null) {
+//            System.out.println("I'm adding a second node");
+
             second = addNode(ent2);
         }
         createRelationship(first,second,date);
@@ -69,7 +74,7 @@ public class graphDbPipeline {
         setMatches(first,second);
         if (needNewConnection(first, second, date) && !date.equals("")) {
             try (Transaction tx = graphDb.beginTx()) {
-                Relationship rel = first.createRelationshipTo(second, RelTypes.UNKNOWN);
+                Relationship rel = first.createRelationshipTo(second, RelTypes.DATE);
                 rel.setProperty("date", date);
                 tx.success();
             }
@@ -94,7 +99,7 @@ public class graphDbPipeline {
         for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
             if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
                 r.setProperty("matches", increaseString(r.getProperty("matches").toString()));
-                System.out.println(r.getProperty("matches").toString());
+//                System.out.println(r.getProperty("matches").toString());
                 return true;
             }
         }
