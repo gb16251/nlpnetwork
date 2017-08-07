@@ -50,12 +50,12 @@ public class netTemplate {
         return templates;
     }
 
-    public void addConnection(String first, String second, String date){
+    public void addConnection(String first, String second, String date,String rel){
         if (first.equals("") ||  second.equals("")){
             return;
         }
         if(!first.equals(second)) {
-            addIndices(manageNode(first), manageNode(second), date);
+            addIndices(manageNode(first), manageNode(second), date,rel);
         }
 
     }
@@ -67,10 +67,10 @@ public class netTemplate {
         return nodes.indexOf(s);
     }
 
-    private void addIndices(int first, int second, String date){
+    private void addIndices(int first, int second, String date,String rel){
 //        if(!connectionExists(first,second,date)) {
             connex newcon = new connex();
-            newcon.setConnection(first, second, date);
+            newcon.setConnection(first, second, date,rel);
             cons.add(newcon);
 //        }
     }
@@ -101,7 +101,10 @@ public class netTemplate {
             System.out.print(" ");
             System.out.print(nodes.get(con.getSecond()));
             System.out.print(" ");
-            System.out.println(con.getDate());
+            System.out.print(con.getDate());
+            System.out.print(" ");
+            System.out.println(con.getRel());
+
 
         }
     }

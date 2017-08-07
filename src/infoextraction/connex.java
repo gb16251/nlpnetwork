@@ -7,6 +7,7 @@ public class connex {
     private int first;
     private int second;
     private String date ="";
+    private String rel = "";
 
     public int getFirst() {
         return first;
@@ -20,11 +21,15 @@ public class connex {
         return date;
     }
 
+    public String getRel() {
+        return rel;
+    }
 
-    public void setConnection(int first, int second, String date){
+    public void setConnection(int first, int second, String date, String rel){
         this.first = first;
         this.second = second;
         this.date += date;
+        this.rel += rel;
     }
 
     public boolean matchesLink(int first, int second,String date){

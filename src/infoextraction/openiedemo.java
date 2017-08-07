@@ -1,7 +1,9 @@
 package infoextraction; /**
  * Created by Gabriela on 19-Jun-17.
  */
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
@@ -37,16 +39,16 @@ public class openiedemo {
         sentenceSimplifier ss = new sentenceSimplifier();
 
         // Loop over sentences in the document
-        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
-            Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-            tree.pennPrint(demo.ps);
-
-            ss.getSubordinates(tree);
+//        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
+//            Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+//            tree.pennPrint(demo.ps);
+//
+//            ss.getSubordinates(tree);
 
 //            tree.getSimplifiedSentences(tree);
 //            tree.pennPrint(demo.ps);
 //            demo.ps.print(tree.toString());
-            // Get the OpenIE triples for the sentence
+        // Get the OpenIE triples for the sentence
 //            Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
 //            for (RelationTriple triple : triples) {
 //                System.out.println(triple.confidence + "\t" +
@@ -54,6 +56,18 @@ public class openiedemo {
 //                        triple.relationLemmaGloss() + "\t" +
 //                        triple.objectLemmaGloss());
 //            }
+//        }
+
+        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
+            // Get the OpenIE triples for the sentence
+            Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+            // Print the triples
+            for (RelationTriple triple : triples) {
+                System.out.println(triple.confidence + "\t" +
+                        triple.subjectLemmaGloss() + "\t" +
+                        triple.relationLemmaGloss() + "\t" +
+                        triple.objectLemmaGloss());
+            }
         }
     }
 

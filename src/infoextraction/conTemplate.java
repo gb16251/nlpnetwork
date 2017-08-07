@@ -7,6 +7,7 @@ public class conTemplate {
     private String node1 = "";
     private String node2 = "";
     private String date = "";
+    private String rel = "";
     public conTemplate(String node1,String node2,String date){
         this.node1 = node1;
         this.node2 = node2;

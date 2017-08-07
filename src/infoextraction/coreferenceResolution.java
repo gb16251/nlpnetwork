@@ -21,12 +21,19 @@ public class coreferenceResolution {
     private Annotation annotation;
     private List<String> allEntities = new ArrayList<>();
     private List<String> allEntitiesAbbreviations = new ArrayList<>();
+    private HashMap<String,String> transformEntity = new HashMap<>();
 
+
+    public String wasTransformed(String s){
+        if (transformEntity.get(s)!= null) return transformEntity.get(s);
+        else return s;
+    }
 
 
     public String isAbbrev(String s){
         if(s.toUpperCase().equals(s)) {
             if (allEntitiesAbbreviations.contains(s)) {
+                transformEntity.put(s,allEntities.get(allEntitiesAbbreviations.indexOf(s)));
                 return allEntities.get(allEntitiesAbbreviations.indexOf(s));
             }
         }
@@ -38,6 +45,7 @@ public class coreferenceResolution {
         if (allEntities.contains(s)) {
             for (String entity: allEntities){
                 if (entity.contains(s)){
+                    transformEntity.put(s,entity);
                     return entity;
                 }
             }
@@ -54,6 +62,7 @@ public class coreferenceResolution {
             allEntities.contains(corefs.get(key).getReference());
             System.out.println(key.getStartIndex());
             System.out.println(key.getEndIndex());
+            transformEntity.put(key.getReference(),corefs.get(key).getReference());
             return corefs.get(key).getReference();
         }
         return null;

@@ -1,8 +1,10 @@
 package infoextraction; /**
  * Created by Gabriela on 14-Jun-17.
  */
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.*;
@@ -31,14 +33,14 @@ public class NLPPipeline {
 
     public static void main(String[] args) {
         NLPPipeline pipe = new NLPPipeline();
-//        pipe.startDB();
+        pipe.startDB();
         pipe.startPipeLine();
     }
 
     public void startPipeLine(){
         openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref,depparse,natlog,openie");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         List<String> texts = new ArrayList<>();
         List <fileRecorder> fileRec = filestream.getText();
@@ -58,10 +60,34 @@ public class NLPPipeline {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document);
         getAnnotations(sentences);
-//        insertToDatabase(network);
+        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences) {
+        for (CoreMap sentence : sentences) {
+            Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+            for (RelationTriple triple : triples) {
+                System.out.println(triple.confidence + "\t" +
+                        triple.subjectLemmaGloss() + "\t" +
+                        triple.relationLemmaGloss() + "\t" +
+                        triple.objectLemmaGloss());
+            }
+            List <String> entitiesList = new ArrayList<>();
+            entitiesList.addAll(addEntitiesToTemplate(sentence));
+            for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                CoreLabel word = new CoreLabel(token);
+                referenceRecorder ref = new referenceRecorder(word.word(),word.sentIndex());
+                String poss = corefResolution.checkNERAssociation(ref);
+                if(poss!=null){
+                    entitiesList.add(poss);
+                }
+            }
+            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network);
+        }
+        network.printNetwork();
+    }
+
+    public void getAnnotationsFour (List<CoreMap> sentences) {
         for (CoreMap sentence : sentences) {
             List <String> entitiesList = new ArrayList<>();
             entitiesList.addAll(addEntitiesToTemplate(sentence));
@@ -147,12 +173,49 @@ public class NLPPipeline {
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
 //                ps.print(s1);ps.print(" ");ps.print(ents.get(i));
 //                ps.println(i);
-                net.addConnection(s1, ents.get(i), listToString(date));
+                net.addConnection(s1, ents.get(i), listToString(date),"");
+            }
+        }
+        return net;
+    }
+    private netTemplate createPairsWithRel (List<String> ents,
+                                            List<String> date,
+                                            Collection<RelationTriple> triples,
+                                            netTemplate net) {
+        for (String s1:ents) {
+            for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
+                List<String> rels = returnRelation(s1,ents.get(i),triples);
+                if(rels.isEmpty()) {
+                    net.addConnection(s1, ents.get(i), listToString(date), "");
+                }
+                else{
+                    for(String rel: rels){
+                        net.addConnection(s1, ents.get(i), listToString(date),rel);
+                    }
+                }
             }
         }
         return net;
     }
 
+
+    private List<String> returnRelation(String a,String b,Collection<RelationTriple> triples){
+        List<String> rels = new ArrayList<>();
+        for (RelationTriple trip:triples){
+            if (containsEntities(a, b, trip)) {
+                rels.add(trip.relationLemmaGloss());
+            }
+        }
+        return rels;
+    }
+
+    private boolean containsEntities(String a,String b, RelationTriple rel){
+        a = corefResolution.wasTransformed(a);
+        b = corefResolution.wasTransformed(b);
+        if(rel.objectLemmaGloss().equals(a) && rel.subjectLemmaGloss().equals(b)) return true;
+        if(rel.objectLemmaGloss().equals(b) && rel.subjectLemmaGloss().equals(a)) return true;
+        return false;
+    }
 
     public String listToString(List<String> dates){
         String date = "";
@@ -170,7 +233,6 @@ public class NLPPipeline {
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
         namedEntities = manageNamedEntities(namedEntities,s.sentenceIndex());
-
         return namedEntities;
     }
 
