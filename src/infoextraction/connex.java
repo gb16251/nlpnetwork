@@ -8,6 +8,8 @@ public class connex {
     private int second;
     private String date ="";
     private String rel = "";
+    private String filename = "";
+
 
     public int getFirst() {
         return first;
@@ -25,11 +27,16 @@ public class connex {
         return rel;
     }
 
-    public void setConnection(int first, int second, String date, String rel){
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setConnection(int first, int second, String date, String filename, String rel){
         this.first = first;
         this.second = second;
         this.date += date;
         this.rel += rel;
+        this.filename += filename;
     }
 
     public boolean matchesLink(int first, int second,String date){

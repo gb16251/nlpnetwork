@@ -47,31 +47,31 @@ public class NLPPipeline {
         //        List<String> texts = filestream.getText();
 
         for (fileRecorder file : fileRec){
-            processText(file.getFileOutput(),pipeline);
+            processText(file,pipeline);
         }
 
     }
-    public void processText(String text, StanfordCoreNLP pipeline){
+    public void processText(fileRecorder file, StanfordCoreNLP pipeline){
 
         // create an empty Annotation just with the given text
-        Annotation document = new Annotation(text);
+        Annotation document = new Annotation(file.getFileOutput());
         // run all Annotators on this text
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document);
-        getAnnotations(sentences);
+        getAnnotations(sentences,file.getTitle());
         insertToDatabase(network);
     }
 
-    public void getAnnotations (List<CoreMap> sentences) {
+    public void getAnnotations (List<CoreMap> sentences,String filename) {
         for (CoreMap sentence : sentences) {
             Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-            for (RelationTriple triple : triples) {
-                System.out.println(triple.confidence + "\t" +
-                        triple.subjectLemmaGloss() + "\t" +
-                        triple.relationLemmaGloss() + "\t" +
-                        triple.objectLemmaGloss());
-            }
+//            for (RelationTriple triple : triples) {
+//                System.out.println(triple.confidence + "\t" +
+//                        triple.subjectLemmaGloss() + "\t" +
+//                        triple.relationLemmaGloss() + "\t" +
+//                        triple.objectLemmaGloss());
+//            }
             List <String> entitiesList = new ArrayList<>();
             entitiesList.addAll(addEntitiesToTemplate(sentence));
             for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
@@ -82,9 +82,9 @@ public class NLPPipeline {
                     entitiesList.add(poss);
                 }
             }
-            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network);
+            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network, filename);
         }
-        network.printNetwork();
+//        network.printNetwork();
     }
 
     public void getAnnotationsFour (List<CoreMap> sentences) {
@@ -154,7 +154,7 @@ public class NLPPipeline {
 
     public void insertToDatabase(netTemplate network ){
         for (conTemplate con: network.getConnections()){
-            database.addBasicConnection(con.getNode1(),con.getNode2(),con.getDate());
+            database.addAdvancedConnection(con.getNode1(),con.getNode2(),con.getDate(),con.getFilename(),con.getRel());
         }
 
     }
@@ -173,7 +173,7 @@ public class NLPPipeline {
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
 //                ps.print(s1);ps.print(" ");ps.print(ents.get(i));
 //                ps.println(i);
-                net.addConnection(s1, ents.get(i), listToString(date),"");
+                net.addConnection(s1, ents.get(i), listToString(date),"","");
             }
         }
         return net;
@@ -181,29 +181,25 @@ public class NLPPipeline {
     private netTemplate createPairsWithRel (List<String> ents,
                                             List<String> date,
                                             Collection<RelationTriple> triples,
-                                            netTemplate net) {
+                                            netTemplate net,
+                                            String filename) {
         for (String s1:ents) {
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
-                List<String> rels = returnRelation(s1,ents.get(i),triples);
-                if(rels.isEmpty()) {
-                    net.addConnection(s1, ents.get(i), listToString(date), "");
-                }
-                else{
-                    for(String rel: rels){
-                        net.addConnection(s1, ents.get(i), listToString(date),rel);
-                    }
-                }
+                String rels = returnRelation(s1,ents.get(i),triples);
+                net.addConnection(s1, ents.get(i), listToString(date),filename,rels);
             }
         }
         return net;
     }
 
 
-    private List<String> returnRelation(String a,String b,Collection<RelationTriple> triples){
-        List<String> rels = new ArrayList<>();
+    private String returnRelation(String a,String b,Collection<RelationTriple> triples){
+        String rels = "";
         for (RelationTriple trip:triples){
             if (containsEntities(a, b, trip)) {
-                rels.add(trip.relationLemmaGloss());
+                if(trip.relationLemmaGloss().length() > rels.length()){
+                    rels = trip.relationLemmaGloss();
+                }
             }
         }
         return rels;

@@ -16,7 +16,7 @@ import java.io.IOException;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "wikiextraction/neo4j-store" );
+    private static final File DB_PATH = new File( "testWfilenames/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -24,7 +24,6 @@ public class graphDbPipeline {
     public enum RelTypes implements RelationshipType
     {
         DATE,
-        LOCATED_IN,
         MATCHES
     }
 
@@ -70,8 +69,29 @@ public class graphDbPipeline {
         createRelationship(first,second,date);
     }
 
-    private void createRelationship(Node first, Node second, String date){
-        setMatches(first,second);
+
+    public void addAdvancedConnection(String ent1, String ent2,String date,String filename,String rel){
+        Node first;
+        Node second;
+//        System.out.println("I'm adding a basic connection");
+
+        if((first = searchNodeByName(ent1)) == null) {
+            first = addNode(ent1);
+//            System.out.println("I'm adding a node");
+
+        }
+        if((second = searchNodeByName(ent2)) == null) {
+//            System.out.println("I'm adding a second node");
+
+            second = addNode(ent2);
+        }
+        createAdvancedRelationship(first,second,date,filename, rel);
+    }
+
+
+    private void createAdvancedRelationship(Node first, Node second, String date,String filename,String relationshipName){
+        setMatches(first,second,filename);
+//        setSources(first,second,filename);
         if (needNewConnection(first, second, date) && !date.equals("")) {
             try (Transaction tx = graphDb.beginTx()) {
                 Relationship rel = first.createRelationshipTo(second, RelTypes.DATE);
@@ -81,25 +101,62 @@ public class graphDbPipeline {
         }
 
     }
-    private void setMatches(Node first, Node second){
+    private void setSources(Node first, Node second,String filename) {
         try (Transaction tx = graphDb.beginTx()) {
-            if (!increaseMatches(first,second)){
+            if(!fillSources(first,second,filename)){
                 Relationship rel = first.createRelationshipTo(second, RelTypes.MATCHES);
-                rel.setProperty("matches", "1");
-            }
-            else {
-//                System.out.println("I'm here now");
-
+                rel.setProperty("files",filename);
             }
             tx.success();
         }
     }
 
-    private boolean increaseMatches (Node first, Node second){
+    private boolean fillSources (Node first, Node second,String filename){
+        for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
+            if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
+                if (!sourceExists(r,filename)) {
+                    r.setProperty("files", r.getProperty("files").toString()+ " " + filename);
+                }
+//                System.out.println(r.getProperty("matches").toString());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean sourceExists(Relationship r,String filename){
+        if(r.getProperty("files").toString().contains(filename)) return true;
+        return false;
+    }
+
+    private void createRelationship(Node first, Node second, String date){
+        setMatches(first,second,"");
+        if (needNewConnection(first, second, date) && !date.equals("")) {
+            try (Transaction tx = graphDb.beginTx()) {
+                Relationship rel = first.createRelationshipTo(second, RelTypes.DATE);
+                rel.setProperty("date", date);
+                tx.success();
+            }
+        }
+    }
+    private void setMatches(Node first, Node second,String filename){
+        try (Transaction tx = graphDb.beginTx()) {
+            if (!increaseMatches(first,second,filename)){
+                Relationship rel = first.createRelationshipTo(second, RelTypes.MATCHES);
+                rel.setProperty("matches", "1");
+                rel.setProperty("files", filename + " " );
+            }
+            tx.success();
+        }
+    }
+
+    private boolean increaseMatches (Node first, Node second,String filename){
         for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
             if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
                 r.setProperty("matches", increaseString(r.getProperty("matches").toString()));
-//                System.out.println(r.getProperty("matches").toString());
+                if (!sourceExists(r,filename)) {
+                    r.setProperty("files", r.getProperty("files").toString()+ " " + filename);
+                }
                 return true;
             }
         }

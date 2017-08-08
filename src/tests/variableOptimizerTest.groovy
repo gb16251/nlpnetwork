@@ -1,7 +1,6 @@
 package tests
 
 import infoextraction.variableOptimizer
-import infoextraction.variableTriples
 
 /**
  * Created by Gabriela on 28-Jul-17.

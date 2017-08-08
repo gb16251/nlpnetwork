@@ -44,18 +44,20 @@ public class netTemplate {
             conTemplate cT = new conTemplate(
                     nodes.get(con.getFirst()),
                     nodes.get(con.getSecond()),
-                    con.getDate());
+                    con.getDate(),
+                    con.getFilename(),
+                    con.getRel());
             templates.add(cT);
         }
         return templates;
     }
 
-    public void addConnection(String first, String second, String date,String rel){
+    public void addConnection(String first, String second, String date,String filename,String rel){
         if (first.equals("") ||  second.equals("")){
             return;
         }
         if(!first.equals(second)) {
-            addIndices(manageNode(first), manageNode(second), date,rel);
+            addIndices(manageNode(first), manageNode(second), date,filename,rel);
         }
 
     }
@@ -67,10 +69,10 @@ public class netTemplate {
         return nodes.indexOf(s);
     }
 
-    private void addIndices(int first, int second, String date,String rel){
+    private void addIndices(int first, int second, String date,String filename, String rel){
 //        if(!connectionExists(first,second,date)) {
             connex newcon = new connex();
-            newcon.setConnection(first, second, date,rel);
+            newcon.setConnection(first, second, date,filename,rel);
             cons.add(newcon);
 //        }
     }
@@ -90,7 +92,9 @@ public class netTemplate {
             templates.add(new conTemplate(
                     nodes.get(con.getFirst()),
                     nodes.get(con.getSecond()),
-                    con.getDate()));
+                    con.getDate(),
+                    con.getFilename(),
+                    con.getRel()));
         }
         return templates;
     }
@@ -103,7 +107,9 @@ public class netTemplate {
             System.out.print(" ");
             System.out.print(con.getDate());
             System.out.print(" ");
-            System.out.println(con.getRel());
+            System.out.print(con.getRel());
+            System.out.print(" ");
+            System.out.println(con.getFilename());
 
 
         }
