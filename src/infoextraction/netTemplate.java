@@ -46,18 +46,19 @@ public class netTemplate {
                     nodes.get(con.getSecond()),
                     con.getDate(),
                     con.getFilename(),
-                    con.getRel());
+                    con.getRel(),
+                    con.getSentence());
             templates.add(cT);
         }
         return templates;
     }
 
-    public void addConnection(String first, String second, String date,String filename,String rel){
+    public void addConnection(String first, String second, String date,String filename,String rel,int sentence){
         if (first.equals("") ||  second.equals("")){
             return;
         }
         if(!first.equals(second)) {
-            addIndices(manageNode(first), manageNode(second), date,filename,rel);
+            addIndices(manageNode(first), manageNode(second), date,filename,rel,sentence);
         }
 
     }
@@ -69,10 +70,10 @@ public class netTemplate {
         return nodes.indexOf(s);
     }
 
-    private void addIndices(int first, int second, String date,String filename, String rel){
+    private void addIndices(int first, int second, String date,String filename, String rel,int sentence){
 //        if(!connectionExists(first,second,date)) {
             connex newcon = new connex();
-            newcon.setConnection(first, second, date,filename,rel);
+            newcon.setConnection(first, second, date,filename,rel,sentence);
             cons.add(newcon);
 //        }
     }
@@ -94,7 +95,8 @@ public class netTemplate {
                     nodes.get(con.getSecond()),
                     con.getDate(),
                     con.getFilename(),
-                    con.getRel()));
+                    con.getRel(),
+                    con.getSentence()));
         }
         return templates;
     }

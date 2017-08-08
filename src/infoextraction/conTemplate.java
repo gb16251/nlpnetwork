@@ -8,15 +8,21 @@ public class conTemplate {
     private String node2 = "";
     private String date = "";
     private String rel = "";
+    private int sentence;
     private String filename = "";
 
 
-    public conTemplate(String node1,String node2,String date,String filename,String rel){
+    public conTemplate(String node1,String node2,String date,String filename,String rel,int sentence){
         this.node1 = node1;
         this.node2 = node2;
         this.date = date;
         this.filename = filename;
         this.rel = rel;
+        this.sentence = sentence;
+    }
+
+    public int getSentence() {
+        return sentence;
     }
 
     public String getDate() {

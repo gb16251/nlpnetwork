@@ -82,7 +82,7 @@ public class NLPPipeline {
                     entitiesList.add(poss);
                 }
             }
-            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network, filename);
+            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network, filename, new Sentence(sentence).sentenceIndex());
         }
 //        network.printNetwork();
     }
@@ -154,7 +154,7 @@ public class NLPPipeline {
 
     public void insertToDatabase(netTemplate network ){
         for (conTemplate con: network.getConnections()){
-            database.addAdvancedConnection(con.getNode1(),con.getNode2(),con.getDate(),con.getFilename(),con.getRel());
+            database.addAdvancedConnection(con.getNode1(),con.getNode2(),con.getDate(),con.getFilename(),con.getRel(),con.getSentence());
         }
 
     }
@@ -173,7 +173,7 @@ public class NLPPipeline {
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
 //                ps.print(s1);ps.print(" ");ps.print(ents.get(i));
 //                ps.println(i);
-                net.addConnection(s1, ents.get(i), listToString(date),"","");
+                net.addConnection(s1, ents.get(i), listToString(date),"","",0);
             }
         }
         return net;
@@ -182,11 +182,12 @@ public class NLPPipeline {
                                             List<String> date,
                                             Collection<RelationTriple> triples,
                                             netTemplate net,
-                                            String filename) {
+                                            String filename,
+                                            int sentence) {
         for (String s1:ents) {
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
                 String rels = returnRelation(s1,ents.get(i),triples);
-                net.addConnection(s1, ents.get(i), listToString(date),filename,rels);
+                net.addConnection(s1, ents.get(i), listToString(date),filename,rels,sentence);
             }
         }
         return net;
@@ -304,5 +305,6 @@ public class NLPPipeline {
             ps.print(s);
         }
     }
+
 
 }

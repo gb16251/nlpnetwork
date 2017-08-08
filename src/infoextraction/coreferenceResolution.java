@@ -52,6 +52,8 @@ public class coreferenceResolution {
         }
         return null;
     }
+
+
     public coreferenceResolution(Annotation annotation){
         this.annotation = annotation;
         getChains();

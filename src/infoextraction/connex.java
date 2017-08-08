@@ -9,7 +9,11 @@ public class connex {
     private String date ="";
     private String rel = "";
     private String filename = "";
+    private int sentence;
 
+    public int getSentence() {
+        return sentence;
+    }
 
     public int getFirst() {
         return first;
@@ -31,12 +35,13 @@ public class connex {
         return filename;
     }
 
-    public void setConnection(int first, int second, String date, String filename, String rel){
+    public void setConnection(int first, int second, String date, String filename, String rel,int sentence){
         this.first = first;
         this.second = second;
         this.date += date;
         this.rel += rel;
         this.filename += filename;
+        this.sentence = sentence;
     }
 
     public boolean matchesLink(int first, int second,String date){

@@ -11,12 +11,14 @@ import org.neo4j.io.fs.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "testWfilenames/neo4j-store" );
+    private static final File DB_PATH = new File( "withSentencePos/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -42,10 +44,11 @@ public class graphDbPipeline {
 
     }
 
-    public Node addNode( String ent1){
+    public Node addNode( String ent1,int sentence){
         try ( Transaction tx = graphDb.beginTx() ){
             Node node = graphDb.createNode();
             node.setProperty("entity", ent1);
+            node.setProperty("mentionPlace"," "+ Integer.toString(sentence)+ " ");
             entities.add(node, "entity", node.getProperty("entity"));
             tx.success();
             return node;
@@ -57,34 +60,33 @@ public class graphDbPipeline {
 //        System.out.println("I'm adding a basic connection");
 
         if((first = searchNodeByName(ent1)) == null) {
-            first = addNode(ent1);
+            first = addNode(ent1,0);
 //            System.out.println("I'm adding a node");
 
         }
         if((second = searchNodeByName(ent2)) == null) {
 //            System.out.println("I'm adding a second node");
 
-            second = addNode(ent2);
+            second = addNode(ent2,0);
         }
         createRelationship(first,second,date);
     }
 
 
-    public void addAdvancedConnection(String ent1, String ent2,String date,String filename,String rel){
+    public void addAdvancedConnection(String ent1, String ent2,String date,String filename,String rel, int sentence){
         Node first;
         Node second;
 //        System.out.println("I'm adding a basic connection");
 
         if((first = searchNodeByName(ent1)) == null) {
-            first = addNode(ent1);
-//            System.out.println("I'm adding a node");
-
+            first = addNode(ent1,sentence);
         }
+        else addMention(first,sentence);
+
         if((second = searchNodeByName(ent2)) == null) {
-//            System.out.println("I'm adding a second node");
-
-            second = addNode(ent2);
+            second = addNode(ent2,sentence);
         }
+        else addMention(second,sentence);
         createAdvancedRelationship(first,second,date,filename, rel);
     }
 
@@ -182,6 +184,26 @@ public class graphDbPipeline {
             tx.success();
         }
         return true;
+    }
+
+
+
+    private Node addMention(Node node, int i){
+        try (Transaction tx = graphDb.beginTx()) {
+            if (!node.getProperty("mentionPlace").toString().contains(" " + Integer.toString(i) + " ")) {
+                node.setProperty("mentionPlace", node.getProperty("mentionPlace").toString() + " " + Integer.toString(i)+" ");
+                tx.success();
+            }
+        }
+            return node;
+    }
+
+
+    public void addMentionPlace(String node, int i ){
+        Node n = searchNodeByName(node);
+        if (n!=null){
+            n.setProperty("mentionPlace",n.getProperty("mentionPlace").toString() + " " + Integer.toString(i));
+        }
     }
 //    Check if a node already exists before adding it to the Db
         private Node searchNodeByName(String s){
