@@ -1,4 +1,6 @@
 stanford-corenlp-full-2017-06-09
 neo4j-community-3.3.0-alpha02
-tri
+databases
+gs-core-1.3
+gs-ui-1.3
 out

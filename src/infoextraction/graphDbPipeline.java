@@ -1,5 +1,7 @@
 package infoextraction;
 
+import graphDisplay.edgeContainer;
+import graphDisplay.nodeContainer;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
@@ -18,7 +20,7 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "withSentencePos/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/withSentences/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -28,8 +30,11 @@ public class graphDbPipeline {
         DATE,
         MATCHES
     }
+    public void readDatabase(){
+        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+        registerShutdownHook();
 
-
+    }
 
     public void initializeGraphDB() throws IOException{
         FileUtils.deleteRecursively( DB_PATH );
@@ -237,9 +242,41 @@ public class graphDbPipeline {
         }
         return false;
     }
+    public List<nodeContainer> getEntityNodes(){
+        List<nodeContainer> addToDisplay = new ArrayList<>();
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+            for (Node n : iterable) {
+                nodeContainer container = new nodeContainer(n.getProperty("entity").toString(), n.getProperty("mentionPlace").toString());
+                addToDisplay.add(container);
+            }
+            tx.success();
+        }
+        return addToDisplay;
+    }
+
+    public List<edgeContainer> getRelationships() {
+        List<edgeContainer> edges = new ArrayList<>();
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Relationship> rels = graphDb.getAllRelationships();
+            for (Relationship r : rels) {
+                if (r.getType().name().equals("MATCHES")) {
+                    edgeContainer e = new edgeContainer(r.getEndNode().getProperty("entity").toString(),
+                            r.getStartNode().getProperty("entity").toString(),
+                            Integer.parseInt(r.getProperty("matches").toString()));
+
+                    System.out.println(r.getEndNode().getProperty("entity").toString());
+                    System.out.println( r.getStartNode().getProperty("entity").toString());
+                    System.out.println(r.getProperty("matches").toString());
+                }
+                tx.success();
+            }
+        }
+        return edges;
+    }
 
 
-    private static void shutdown()
+        private static void shutdown()
     {
         graphDb.shutdown();
     }
