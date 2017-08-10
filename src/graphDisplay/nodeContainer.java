@@ -16,4 +16,5 @@ public class nodeContainer {
     public String toString(){
         return this.name;
     }
+    public String getOccurences(){return this.occurences;}
 }

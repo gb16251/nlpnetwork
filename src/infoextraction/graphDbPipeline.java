@@ -264,10 +264,10 @@ public class graphDbPipeline {
                     edgeContainer e = new edgeContainer(r.getEndNode().getProperty("entity").toString(),
                             r.getStartNode().getProperty("entity").toString(),
                             Integer.parseInt(r.getProperty("matches").toString()));
-
-                    System.out.println(r.getEndNode().getProperty("entity").toString());
-                    System.out.println( r.getStartNode().getProperty("entity").toString());
-                    System.out.println(r.getProperty("matches").toString());
+                    edges.add(e);
+//                    System.out.println(r.getEndNode().getProperty("entity").toString());
+//                    System.out.println( r.getStartNode().getProperty("entity").toString());
+//                    System.out.println(r.getProperty("matches").toString());
                 }
                 tx.success();
             }

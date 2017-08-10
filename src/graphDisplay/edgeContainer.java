@@ -14,4 +14,15 @@ public class edgeContainer {
         this.matches = matches;
     }
 
+    public String getNode1() {
+        return node1;
+    }
+
+    public String getNode2() {
+        return node2;
+    }
+
+    public int getMatches() {
+        return matches;
+    }
 }
