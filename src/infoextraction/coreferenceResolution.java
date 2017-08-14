@@ -94,7 +94,7 @@ public class coreferenceResolution {
     }
 
     private void getAbbreviations(){
-        abbreviationManager aManage = new abbreviationManager();
+        acronymManager aManage = new acronymManager();
         for(String entity: allEntities){
             allEntitiesAbbreviations.add(aManage.splitString(entity));
         }

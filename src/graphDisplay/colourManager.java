@@ -6,8 +6,8 @@ package graphDisplay;
 public class colourManager {
     public static void main(String args[]) {
         colourManager colours = new colourManager();
-
     }
+
 
     public int createSineWaves(String s){
         int i = Integer.parseInt(s);

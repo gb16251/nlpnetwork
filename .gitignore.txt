@@ -4,3 +4,5 @@ databases
 gs-core-1.3
 gs-ui-1.3
 out
+gephi-toolkit-0.9.1-all.jar
+gephi

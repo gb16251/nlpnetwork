@@ -36,6 +36,13 @@ public class connex {
     }
 
     public void setConnection(int first, int second, String date, String filename, String rel,int sentence){
+        try {
+            if (first == second) {
+                throw new Exception("Node cannot link to itself");
+            }
+        }
+        catch (Exception e){System.err.println(e.getMessage());
+            }
         this.first = first;
         this.second = second;
         this.date += date;

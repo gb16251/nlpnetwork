@@ -23,7 +23,10 @@ public class averageCalculator {
 
     public void getSums(){
         for (int i= 0; i<=100; i++) {
-            results[i] = (int) (sums[i] / values[i]);
+            try {
+                results[i] = (int) (sums[i] / values[i]);
+            }
+            catch (Exception e ) {System.err.println("Could not divide by 0");}
         }
     }
 

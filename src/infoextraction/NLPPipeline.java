@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
+//Java Heap Space: -Xms1024m -Xmx4024m
 public class NLPPipeline {
     private PrintStream ps = new PrintStream(System.out);
     private graphDbPipeline database = new graphDbPipeline();

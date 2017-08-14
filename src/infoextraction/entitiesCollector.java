@@ -8,7 +8,6 @@ import java.util.List;
  */
 public class entitiesCollector {
     List<String> ents = new ArrayList<>();
-
     public void setEnts(List<String> ents) {
         this.ents = ents;
     }

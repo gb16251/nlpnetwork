@@ -20,14 +20,14 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/withSentences/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/anotherTest/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
     IndexHits<Relationship> timeRelationships;
     public enum RelTypes implements RelationshipType
     {
-        DATE,
+        INTERACTION,
         MATCHES
     }
     public void readDatabase(){
@@ -49,7 +49,7 @@ public class graphDbPipeline {
 
     }
 
-    public Node addNode( String ent1,int sentence){
+    public Node addNode(String ent1,int sentence){
         try ( Transaction tx = graphDb.beginTx() ){
             Node node = graphDb.createNode();
             node.setProperty("entity", ent1);
@@ -99,10 +99,11 @@ public class graphDbPipeline {
     private void createAdvancedRelationship(Node first, Node second, String date,String filename,String relationshipName){
         setMatches(first,second,filename);
 //        setSources(first,second,filename);
-        if (needNewConnection(first, second, date) && !date.equals("")) {
+        if (needNewConnection(first, second, date,relationshipName) && (!date.equals("") || !relationshipName.equals(""))) {
             try (Transaction tx = graphDb.beginTx()) {
-                Relationship rel = first.createRelationshipTo(second, RelTypes.DATE);
+                Relationship rel = first.createRelationshipTo(second, RelTypes.INTERACTION);
                 rel.setProperty("date", date);
+                rel.setProperty("relationship", relationshipName);
                 tx.success();
             }
         }
@@ -138,9 +139,9 @@ public class graphDbPipeline {
 
     private void createRelationship(Node first, Node second, String date){
         setMatches(first,second,"");
-        if (needNewConnection(first, second, date) && !date.equals("")) {
+        if (needNewConnection(first, second, date,"") && !date.equals("")) {
             try (Transaction tx = graphDb.beginTx()) {
-                Relationship rel = first.createRelationshipTo(second, RelTypes.DATE);
+                Relationship rel = first.createRelationshipTo(second, RelTypes.INTERACTION);
                 rel.setProperty("date", date);
                 tx.success();
             }
@@ -176,12 +177,11 @@ public class graphDbPipeline {
         return Integer.toString(i);
     }
 
-//    TODO: See if there already is an empty connection and then add to the number of matches if there is no date
-    private boolean needNewConnection(Node first, Node second, String date){
+    private boolean needNewConnection(Node first, Node second, String date,String rel){
         try (Transaction tx = graphDb.beginTx()) {
-            for (Relationship r : first.getRelationships(RelationshipType.withName("date"))) {
+            for (Relationship r : first.getRelationships()) {
                 if (r.getOtherNode(first) == second) {
-                    if (r.getProperty("date") == date) {
+                    if (r.getProperty("date") == date && r.getProperty("relationship") == rel) {
                         return false;
                     }
                 }

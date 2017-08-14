@@ -3,7 +3,7 @@ package infoextraction;
 /**
  * Created by Gabriela on 07-Jul-17.
  */
-public class abbreviationManager {
+public class acronymManager {
 
     public String splitString(String s){
         if (s.contains(" ") && !s.contains(".")) return splitOnSpace(s);
@@ -35,6 +35,25 @@ public class abbreviationManager {
     }
 
 
+    public boolean isPossibleAbbrev(String a, String b){
+        a = a.toLowerCase();
+        b = b.toLowerCase();
+//        System.out.println(0.34 * max(a,b));
+
+        if (a.length() < 2 || b.length() < 2) return  false;
+        else if(a.length() <=5 && b.length() <=5){
+            if((double)computeLevenshteinDistance(a,b) <= 0.34 * max(a,b)){
+                return true;
+            }
+        }
+        else {
+            if((double)computeLevenshteinDistance(a,b) <= 0.25 * max(a,b)){
+                return true;
+            }
+        }
+        return false;
+    }
+
 //    Calculates the edit distance between two strings to determine their similarity
     //    Source :https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Java
     public int computeLevenshteinDistance(String lhs, String rhs) {
@@ -60,21 +79,9 @@ public class abbreviationManager {
         return Math.min(Math.min(a, b), c);
     }
 
-
-    public static void main(String[] args) {
-
-        abbreviationManager am = new abbreviationManager();
-        System.out.println(am.splitString("march"));
-        System.out.println(am.splitString("march."));
-        System.out.println(am.splitString("ma rch."));
-        System.out.println(am.splitString("m.a.r.c.h"));
-        System.out.println(am.splitString("m a r c h"));
-        System.out.println(am.splitString("Serious Fraud Office"));
-
-
-
-//        System.out.println(am.splitOnSpace("United States Of America"));
-//        System.out.println(am.splitOnPeriod("U.S.A."));
-//        System.out.println(am.computeLevenshteinDistance("USA","USA"));
+    private int max(String a, String b){
+        if (a.length() > b.length()) return a.length();
+        else return b.length();
     }
+
 }
