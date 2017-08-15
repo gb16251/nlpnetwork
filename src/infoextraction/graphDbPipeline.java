@@ -8,6 +8,7 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.graphdb.traversal.Traverser;
 import org.neo4j.graphdb.traversal.Uniqueness;
 import org.neo4j.io.fs.FileUtils;
 
@@ -20,7 +21,7 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/anotherTest/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/wikiarticle/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -273,6 +274,63 @@ public class graphDbPipeline {
             }
         }
         return edges;
+    }
+
+
+    public int countDisconnectedGraphs() {
+        removeAllLabels();
+        boolean done = false;
+        int count = 0;
+            while(!done) {
+                Node n = findUnlabelledNode();
+                if (n == null) {
+                    done = true;
+                }
+                else {
+                    count++;
+                    try (Transaction tx = graphDb.beginTx()) {
+                        n.addLabel(Label.label("checked"));
+                        Traverser trav = findConnectedGraph(n);
+                        for (Node node: trav.nodes()){
+                            node.addLabel(Label.label("checked"));
+                        }
+                        tx.success();
+                    }
+                }
+            }
+        removeAllLabels();
+        return count;
+    }
+
+    private void removeAllLabels(){
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+            for (Node n : iterable) {
+                n.removeLabel(Label.label("checked"));
+            }
+            tx.success();
+        }
+    }
+
+    private Node findUnlabelledNode(){
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+            for (Node n : iterable) {
+                if (!n.hasLabel(Label.label("checked"))) {
+                    System.out.println(n.getProperty("entity"));
+                    return n;
+                }
+            }
+            tx.success();
+            return null;
+        }
+    }
+
+
+    private Traverser findConnectedGraph( Node startNode )
+    {
+        TraversalDescription td = graphDb.traversalDescription();
+        return td.traverse( startNode );
     }
 
 

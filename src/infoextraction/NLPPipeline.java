@@ -34,7 +34,7 @@ public class NLPPipeline {
 
     public static void main(String[] args) {
         NLPPipeline pipe = new NLPPipeline();
-        pipe.startDB();
+//        pipe.startDB();
         pipe.startPipeLine();
     }
 
@@ -61,7 +61,7 @@ public class NLPPipeline {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document);
         getAnnotations(sentences,file.getTitle());
-        insertToDatabase(network);
+//        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences,String filename) {
