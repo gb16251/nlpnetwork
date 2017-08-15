@@ -24,19 +24,17 @@ public class openiedemo {
 
     public static void main(String[] args) throws Exception {
         openiedemo demo = new openiedemo();
-
+        openFiles filestream = new openFiles();
         // Create the Stanford CoreNLP pipeline
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize,ssplit,pos,lemma,parse,depparse,natlog,openie");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        List <fileRecorder> fileRec = filestream.getText();
 
 //         Annotate an example document.
-        Annotation doc = new Annotation("The Serious Fraud Office which brought the Barclays prosecutions told Panorama that evidence of lowballing was provided to the defence.\n" +
-                "Libor is the rate at which banks lend to each other, setting a benchmark for mortgages and loans for ordinary customers.\n" +
-                "The recording calls into question evidence given in 2012 to the Treasury select committee by former Barclays boss Bob Diamond and Paul Tucker, the man who went on to become the deputy governor of the Bank of England.\n");
-//        Annotation doc = new Annotation("The Serious Fraud Office which brought the Barclays prosecutions told Panorama");
-        pipeline.annotate(doc);
-        sentenceSimplifier ss = new sentenceSimplifier();
+        for (fileRecorder file : fileRec) {
+            demo.processText(file,pipeline);
+        }
 
         // Loop over sentences in the document
 //        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
@@ -58,18 +56,43 @@ public class openiedemo {
 //            }
 //        }
 
-        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
-            // Get the OpenIE triples for the sentence
-            Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-            // Print the triples
-            for (RelationTriple triple : triples) {
-                System.out.println(triple.confidence + "\t" +
-                        triple.subjectLemmaGloss() + "\t" +
-                        triple.relationLemmaGloss() + "\t" +
-                        triple.objectLemmaGloss());
-            }
-        }
+//        for (CoreMap sentence : doc.get(CoreAnnotations.SentencesAnnotation.class)) {
+//            // Get the OpenIE triples for the sentence
+//            Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+//            // Print the triples
+//            for (RelationTriple triple : triples) {
+//                System.out.println(triple.confidence + "\t" +
+//                        triple.subjectLemmaGloss() + "\t" +
+//                        triple.relationLemmaGloss() + "\t" +
+//                        triple.objectLemmaGloss());
+//            }
+//        }
     }
+    public void processText(fileRecorder file, StanfordCoreNLP pipeline){
 
+        Annotation document = new Annotation(file.getFileOutput());
+        pipeline.annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        sentenceSimplifier ss = new sentenceSimplifier();
+                for (CoreMap sentence : document.get(CoreAnnotations.SentencesAnnotation.class)) {
+                    Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+//                    Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+            // Print the triples
+//            for (RelationTriple triple : triples) {
+//                System.out.println(triple.confidence + "\t" +
+//                        triple.subjectLemmaGloss() + "\t" +
+//                        triple.relationLemmaGloss() + "\t" +
+//                        triple.objectLemmaGloss());
+//            }
+
+                    tree.pennPrint();
+                    ss.getSubordinatesRecursive(tree);
+
+
+                }
+
+
+
+    }
 }
 

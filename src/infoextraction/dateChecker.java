@@ -55,6 +55,33 @@ public class dateChecker {
         return words;
     }
 
+    public double getYearMonth(String s){
+        String words[] = checkIfNeedsToSplit(s);
+        if (words == null) {
+            if(isYear(s)){return Double.parseDouble(s);}
+            if (isMonth(s)){return -0.1;}
+        }
+        else{
+            if(words.length>2) {return -0.1;}
+            else{
+                return getSpecific(words);
+            }
+        }
+        return -0.1;
+    }
+
+    private double getSpecific(String[] words){
+        if(isMonth(words[0]) && isYear(words[1])) {
+//            System.out.println(0.084 *((double)months.indexOf(words[0].toLowerCase()) +1.0 ));
+            return Double.parseDouble(words[1])  + 0.084 * ((double)months.indexOf(words[0].toLowerCase()) );
+        }
+        if(isMonth(words[1]) && isYear(words[0])) {
+//            System.out.println(0.084 *((double)months.indexOf(words[1].toLowerCase()) +1.0 ));
+
+            return Double.parseDouble(words[0]) + 0.084 * ((double)months.indexOf(words[1].toLowerCase()));
+        }
+        return -0.1;
+    }
     //
 //    The program will throw away any years that are more than 3 years
 //    greater than the current date - OK for discovering future plans but

@@ -34,7 +34,7 @@ public class NLPPipeline {
 
     public static void main(String[] args) {
         NLPPipeline pipe = new NLPPipeline();
-//        pipe.startDB();
+        pipe.startDB();
         pipe.startPipeLine();
     }
 
@@ -43,7 +43,7 @@ public class NLPPipeline {
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref,depparse,natlog,openie");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        List<String> texts = new ArrayList<>();
+//        List<String> texts = new ArrayList<>();
         List <fileRecorder> fileRec = filestream.getText();
         //        List<String> texts = filestream.getText();
 
@@ -61,7 +61,7 @@ public class NLPPipeline {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document);
         getAnnotations(sentences,file.getTitle());
-//        insertToDatabase(network);
+        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences,String filename) {

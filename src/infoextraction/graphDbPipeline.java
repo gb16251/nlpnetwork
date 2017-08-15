@@ -2,6 +2,9 @@ package infoextraction;
 
 import graphDisplay.edgeContainer;
 import graphDisplay.nodeContainer;
+import metroMapMockup.metroLine;
+import metroMapMockup.metroMap;
+import metroMapMockup.metroStop;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
@@ -15,13 +18,14 @@ import org.neo4j.io.fs.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/wikiarticle/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/wikiarticle2/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -327,7 +331,48 @@ public class graphDbPipeline {
     }
 
 
-    private Traverser findConnectedGraph( Node startNode )
+
+    public HashMap<String,Integer> setMetroId(){
+        HashMap<String,Integer> metroID = new HashMap<>();
+        int i = 1;
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+            for (Node n : iterable) {
+                if(n.hasRelationship(RelTypes.INTERACTION)){
+                    metroID.put(n.getProperty("entity").toString(),i++);
+                }
+            }
+            tx.success();
+        }
+        return metroID;
+    }
+
+
+    public metroMap getMetroMap(){
+        metroMap map = new metroMap();
+        int i = 1;
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+            for (Node n : iterable) {
+                metroLine line = new metroLine(i++,n.getProperty("entity").toString());
+                Iterable<Relationship> rels =  n.getRelationships(RelTypes.INTERACTION);
+                for(Relationship r : rels){
+                    if(r.getProperty("date").toString().length() > 0){
+                        line.addStop(new metroStop(n.getProperty("entity").toString(),
+                                r.getOtherNode(n).getProperty("entity").toString(),
+                                (r.getProperty("date").toString())));
+                    }
+                }
+                map.addLine(line);
+            }
+            tx.success();
+        }
+        return map;
+    }
+
+
+
+    private Traverser findConnectedGraph(Node startNode)
     {
         TraversalDescription td = graphDb.traversalDescription();
         return td.traverse( startNode );

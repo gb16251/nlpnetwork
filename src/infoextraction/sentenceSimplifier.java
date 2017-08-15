@@ -1,8 +1,11 @@
 package infoextraction;
 
+import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.CoreMap;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +18,7 @@ import static edu.stanford.nlp.trees.Tree.valueOf;
 public class sentenceSimplifier {
     PrintStream ps = new PrintStream(System.out);
     simplifiedSentences extra = new simplifiedSentences();
+    List <String> newsents = new ArrayList<>();
 
 
     public Tree pruneTree (Tree tree){
@@ -57,19 +61,47 @@ public class sentenceSimplifier {
         return s;
     }
     public void getSubordinates(Tree tree){
+        List<String> sentences = new ArrayList<>();
         if (tree.depth() <2 ) return;
         String sentence = tree.toString();
         int index = sentence.indexOf("S");
         int closeIndex = findClosingParen(sentence.toCharArray(), index+2 );
-        ps.println(sentence.length());
         String s = "";
         s = s+ (sentence.substring(0,index-1) + sentence.substring(closeIndex+1,sentence.length()));
-        ps.println(s);
         Tree t2 = valueOf(s);
-//        getSubordinates(t2);
-//        getSubordinates(valueOf(s2));
-
+        t2.pennPrint();
+//        ps.println(getCleanTree(t2));
     }
+
+    public void getSubordinatesRecursive(Tree tree){
+        if(tree == null) return;
+        if(tree.depth()< 3) return;
+
+        String sentence = tree.toString();
+        int index = sentence.indexOf("S") + 2;
+        if(index<=0){
+            index = sentence.indexOf("SBAR") + 4;
+        }
+        if (index<=0) return;
+        int closeIndex = findClosingParen(sentence.toCharArray(), index );
+        String s1 = "";
+        String s2 = "";
+        s1 = (sentence.substring(0,index-1) + sentence.substring(closeIndex+1,sentence.length()));
+        s2 = (sentence.substring(index,closeIndex+1));
+        System.out.println(s1);
+        System.out.println(s2);
+        getSubordinatesRecursive(valueOf(s1));
+//        getSubordinatesRecursive(valueOf(addRoot(s2)));
+    }
+
+    public String addRoot(String s){
+        if(!s.contains("ROOT")){
+            return "(ROOT  (" + s;
+        }
+        return s;
+    }
+
+
     public void getSimplifiedSentences(Tree tree){
         getSubordinates(tree);
 
