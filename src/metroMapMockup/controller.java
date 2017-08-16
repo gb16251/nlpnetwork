@@ -7,16 +7,25 @@ import infoextraction.graphDbPipeline;
  */
 public class controller {
     graphDbPipeline db = new graphDbPipeline();
+    metroMap map;
+
+    public controller(){
+        db.readDatabase();
+        map = new metroMap(db.getMetroLines(),db.getMetroStops());
+        map.printLines();
+    }
+
+    public metroMap getMap() {
+        return map;
+    }
 
     public static void main(String[] args) {
         controller con = new controller();
-        con.control();
     }
 
     public void control(){
         db.readDatabase();
-        metroMap map = db.getMetroMap();
-        map.manageMap();
+        map = new metroMap(db.getMetroLines(),db.getMetroStops());
         map.printLines();
         System.out.println(map.getAverageStops());
     }

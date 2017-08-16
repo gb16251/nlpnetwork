@@ -47,12 +47,12 @@ public class LineChartWithHover extends Application {
     public ObservableList<XYChart.Data<Integer, Integer>> plot(int... y) {
         final ObservableList<XYChart.Data<Integer, Integer>> dataset = FXCollections.observableArrayList();
         int i = 0;
+        int m = 0;
+        int j = 0;
         while (i < y.length) {
-            final XYChart.Data<Integer, Integer> data = new XYChart.Data<>(i + 1, y[i]);
+            final XYChart.Data<Integer, Integer> data = new XYChart.Data<>(m++,j++);
             data.setNode(
-                    new HoveredThresholdNode(
-                            (i == 0) ? 0 : y[i-1],
-                            y[i]
+                    new HoveredThresholdNode("bla"
                     )
             );
 
@@ -65,10 +65,10 @@ public class LineChartWithHover extends Application {
 
     /** a node which displays a value on hover, but is otherwise empty */
     class HoveredThresholdNode extends StackPane {
-        HoveredThresholdNode(int priorValue, int value) {
+        HoveredThresholdNode(String s) {
             setPrefSize(15, 15);
 
-            final Label label = createDataThresholdLabel(priorValue, value);
+            final Label label = createDataThresholdLabel(s);
 
             setOnMouseEntered(new EventHandler<MouseEvent>() {
                 @Override public void handle(MouseEvent mouseEvent) {
@@ -85,23 +85,16 @@ public class LineChartWithHover extends Application {
             });
         }
 
-        private Label createDataThresholdLabel(int priorValue, int value) {
+        private Label createDataThresholdLabel(String value) {
             final Label label = new Label(value + "");
             label.getStyleClass().addAll("default-color0", "chart-line-symbol", "chart-series-line");
             label.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
-
-            if (priorValue == 0) {
-                label.setTextFill(Color.DARKGRAY);
-            } else if (value > priorValue) {
-                label.setTextFill(Color.FORESTGREEN);
-            } else {
-                label.setTextFill(Color.FIREBRICK);
-            }
-
+            label.setTextFill(Color.FORESTGREEN);
             label.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
             return label;
         }
     }
 
     public static void main(String[] args) { launch(args); }
+
 }

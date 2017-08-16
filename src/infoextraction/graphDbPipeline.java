@@ -347,28 +347,59 @@ public class graphDbPipeline {
         return metroID;
     }
 
-
-    public metroMap getMetroMap(){
-        metroMap map = new metroMap();
+    public List<metroLine>  getMetroLines(){
         int i = 1;
+        List<metroLine> lines = new ArrayList<>();
         try (Transaction tx = graphDb.beginTx()) {
             ResourceIterable<Node> iterable = graphDb.getAllNodes();
             for (Node n : iterable) {
-                metroLine line = new metroLine(i++,n.getProperty("entity").toString());
-                Iterable<Relationship> rels =  n.getRelationships(RelTypes.INTERACTION);
-                for(Relationship r : rels){
-                    if(r.getProperty("date").toString().length() > 0){
-                        line.addStop(new metroStop(n.getProperty("entity").toString(),
-                                r.getOtherNode(n).getProperty("entity").toString(),
-                                (r.getProperty("date").toString())));
-                    }
+                if(n.hasRelationship(RelTypes.INTERACTION)){
+                lines.add(new metroLine(i++,n.getProperty("entity").toString()));
                 }
-                map.addLine(line);
             }
             tx.success();
         }
-        return map;
+        return lines;
     }
+    public  List<metroStop> getMetroStops() {
+        List<metroStop> stops = new ArrayList<>();
+        try (Transaction tx = graphDb.beginTx()) {
+            Iterable<Relationship> rels =  graphDb.getAllRelationships();
+            for(Relationship r: rels){
+                if (r.hasProperty("date")) {
+                    if (r.getProperty("date").toString().length() > 0){
+                        stops.add(new metroStop(r.getEndNode().getProperty("entity").toString(),
+                                r.getStartNode().getProperty("entity").toString(),
+                                (r.getProperty("date").toString())));
+                    }
+                }
+            }
+            tx.success();
+        }
+        return stops;
+    }
+
+//    public metroMap getMetroMap(){
+//        metroMap map = new metroMap();
+//        int i = 1;
+//        try (Transaction tx = graphDb.beginTx()) {
+//            ResourceIterable<Node> iterable = graphDb.getAllNodes();
+//            for (Node n : iterable) {
+//                metroLine line = new metroLine(i++,n.getProperty("entity").toString());
+//                Iterable<Relationship> rels =  n.getRelationships(RelTypes.INTERACTION);
+//                for(Relationship r : rels){
+//                    if(r.getProperty("date").toString().length() > 0){
+//                        line.addStop(new metroStop(n.getProperty("entity").toString(),
+//                                r.getOtherNode(n).getProperty("entity").toString(),
+//                                (r.getProperty("date").toString())));
+//                    }
+//                }
+//                map.addLine(line);
+//            }
+//            tx.success();
+//        }
+//        return map;
+//    }
 
 
 
