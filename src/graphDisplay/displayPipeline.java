@@ -123,7 +123,7 @@ public class displayPipeline {
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("io_gexf.gexf"));
+            ec.exportFile(new File("enron.gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;

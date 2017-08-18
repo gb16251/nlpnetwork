@@ -5,35 +5,20 @@ package infoextraction;
  */
 public class referenceRecorder {
     private String reference = "";
-    private int startIndex;
-    private int endIndex;
-    private int sentence;
+    private String docName = "";
+    private int sentence = 0;
 
 
-    public referenceRecorder(String ref, int sent){
-        reference +=ref;
-//        startIndex = start;
-//        endIndex = end;
-        sentence = sent;
+    public referenceRecorder(String ref, int sent,String docName){
+        this.reference =ref;
+        this.sentence = sent;
+        this.docName = docName;
     }
+
     public String getReference() {return reference;}
-    public int getStartIndex() {return startIndex;}
-    public int getEndIndex(){ return endIndex;}
-    public int getSentence(){ return endIndex;}
+    public int getSentence(){ return sentence;}
 
-
-
-    public void printValues(){
-        System.out.print("Name: ");
-        System.out.println(reference);
-
-        System.out.print("Start index: ");
-        System.out.println(startIndex);
-
-        System.out.print("End Index: ");
-        System.out.println(endIndex);
-
-
+    public String getDocName() {
+        return docName;
     }
-
 }

@@ -6,6 +6,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.simple.Sentence;
+import edu.stanford.nlp.util.ArrayMap;
 import edu.stanford.nlp.util.CoreMap;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.*;
  */
 public class coreferenceResolution {
     private PrintWriter out = new PrintWriter(System.out);
-    private HashMap<referenceRecorder,referenceRecorder> corefs = new HashMap<>();
+    private Map<referenceRecorder,referenceRecorder> corefs = new ArrayMap<>();
     private Annotation annotation;
     private List<String> allEntities = new ArrayList<>();
     private List<String> allEntitiesAbbreviations = new ArrayList<>();
@@ -29,9 +30,8 @@ public class coreferenceResolution {
         else return s;
     }
 
-
     public String isAbbrev(String s){
-        if(s.toUpperCase().equals(s)) {
+        if(s.toUpperCase().equals(s) && !s.contains(" ")) {
             if (allEntitiesAbbreviations.contains(s)) {
                 transformEntity.put(s,allEntities.get(allEntitiesAbbreviations.indexOf(s)));
                 return allEntities.get(allEntitiesAbbreviations.indexOf(s));
@@ -40,7 +40,7 @@ public class coreferenceResolution {
         return null;
     }
 
-
+//TODO: do more than
     public String checkIfExists(String s){
         if (allEntities.contains(s)) {
             for (String entity: allEntities){
@@ -54,21 +54,38 @@ public class coreferenceResolution {
     }
 
 
-    public coreferenceResolution(Annotation annotation){
+    public coreferenceResolution(Annotation annotation,String fileName){
         this.annotation = annotation;
-        getChains();
+//        getChains(fileName);
     }
 
     public String checkNERAssociation(referenceRecorder key){
-        if(corefs.containsKey(key)){
-            allEntities.contains(corefs.get(key).getReference());
-            System.out.println(key.getStartIndex());
-            System.out.println(key.getEndIndex());
-            transformEntity.put(key.getReference(),corefs.get(key).getReference());
-            return corefs.get(key).getReference();
+        referenceRecorder val = checkMap(key);
+        try {
+            if (allEntities.contains(val.getReference())) {
+                transformEntity.put(key.getReference(), val.getReference());
+                return val.getReference();
+            }
+        }
+        catch (NullPointerException e){System.err.println("Reference must have a name.");}
+        return null;
+    }
+
+    private referenceRecorder checkMap(referenceRecorder ref){
+        for (Map.Entry<referenceRecorder, referenceRecorder> entry : corefs.entrySet()) {
+            referenceRecorder key = entry.getKey();
+            if(key.getReference().equals(ref.getReference()) &&
+                    key.getSentence() == ref.getSentence() &&
+            key.getDocName().equals(ref.getDocName())){
+                return entry.getValue();
+            }
         }
         return null;
     }
+
+//    private getMatchingReference(re)
+
+
 
 
     private void getNamedEntities(List<CoreMap> sentences){
@@ -99,7 +116,7 @@ public class coreferenceResolution {
             allEntitiesAbbreviations.add(aManage.splitString(entity));
         }
     }
-    public void getChains() {
+    public void getChains(String fileName) {
 //        Annotation annotation = annotateSentence(s);
         List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
         getNamedEntities(sentences);
@@ -108,43 +125,36 @@ public class coreferenceResolution {
             Map<Integer, CorefChain> corefChains =
                     annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
             if (corefChains == null) { return; }
-            processText(corefChains,corefs);
+            processText(corefChains,corefs,fileName);
         }
     }
 
     private void processText(Map<Integer, CorefChain> corefChains,
-                             HashMap<referenceRecorder,referenceRecorder> corefs) {
+                             Map<referenceRecorder,referenceRecorder> corefs,
+                             String fileName) {
         for (Map.Entry<Integer,CorefChain> entry: corefChains.entrySet()) {
             CorefChain.CorefMention repr = entry.getValue().getRepresentativeMention();
 //            out.println("Chain " + entry.getKey());
 //            out.print("Reprjf mention: ");
 //            out.println(repr.mentionSpan);
 //            out.println("--");
-            referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum);
-            createChain(corefs,repr,mapTo,entry);
+            referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum,fileName);
+            createChain(corefs,repr,mapTo,entry,fileName);
         }
     }
 
 
-    private void createChain(HashMap<referenceRecorder,referenceRecorder> corefs,CorefChain.CorefMention repr,
-                             referenceRecorder mapTo,Map.Entry<Integer,CorefChain> entry){
+    private void createChain(Map<referenceRecorder,referenceRecorder> corefs,CorefChain.CorefMention repr,
+                             referenceRecorder mapTo,Map.Entry<Integer,CorefChain> entry,
+                             String fileName){
         for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder()) {
-            referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum);
+            referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum,fileName);
             corefs.put(key,mapTo);
         }
     }
-    public HashMap<referenceRecorder,referenceRecorder> getCorefs(){ return corefs;}
+    public Map<referenceRecorder,referenceRecorder> getCorefs(){ return corefs;}
 
-    public void smth(){
-        System.out.println("This is the map: ");
-        for (Map.Entry<referenceRecorder, referenceRecorder> entry : getCorefs().entrySet()){
-            referenceRecorder key = entry.getKey();
-            referenceRecorder value = entry.getValue();
-            System.out.print(key.getReference());
-            System.out.print("->");
-            System.out.println(value.getReference());
-        }
-    }
+
     public void printCorefs(){
         for (Map.Entry<referenceRecorder, referenceRecorder> entry : corefs.entrySet()){
             referenceRecorder key = entry.getKey();
@@ -153,6 +163,23 @@ public class coreferenceResolution {
             System.out.print("->");
             System.out.println(value.getReference());
         }
+    }
+
+
+//    utils
+
+
+    public void putReference(referenceRecorder a, referenceRecorder b){
+        corefs.put(a,b);
+    }
+
+
+    public void setCorefs(HashMap<referenceRecorder, referenceRecorder> corefs) {
+        this.corefs = corefs;
+    }
+
+    public void setAllEntities(List<String> allEntities) {
+        this.allEntities = allEntities;
     }
 
     public static void main(String[] args) throws IOException {

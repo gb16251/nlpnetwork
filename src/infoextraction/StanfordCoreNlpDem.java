@@ -95,11 +95,11 @@ public class StanfordCoreNlpDem {
           out.print("Reprjf mention: ");
           out.println(repr.mentionSpan);
           out.println("--");
-        referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum);
+//        referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum);
         for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder()) {
-          referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum);
-          key.printValues();
-          corefs.put(key,mapTo);
+//          referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum);
+//          key.printValues();
+//          corefs.put(key,mapTo);
           // We need to subtract one since the indices count from 1 but the Lists start from 0
 //          List<CoreLabel> tokens = sentences.get(m.sentNum - 1).get(CoreAnnotations.TokensAnnotation.class);
           // We subtract two for end: one for 0-based indexing, and one because we want last token of mention not one following.

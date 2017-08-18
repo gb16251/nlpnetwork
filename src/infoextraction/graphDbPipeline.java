@@ -25,7 +25,7 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/wikiarticle2/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/enron/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;

@@ -45,7 +45,7 @@ public class metroMapDemo extends Application {
 
     @Override public void start(Stage stage) {
         final LineChart lineChart =
-                new LineChart(new NumberAxis(2005,2017.0,1), new NumberAxis());
+                new LineChart(new NumberAxis(1995,2020.0,1), new NumberAxis());
         controller con = new controller();
         for (metroLine m : con.getMap().getLines()) {
             final ObservableList<XYChart.Data<Integer, Integer>> dataset = FXCollections.observableArrayList();
@@ -53,7 +53,7 @@ public class metroMapDemo extends Application {
             series.setName(m.getName());
             List<metroStop> s = con.getMap().getSpecificStops(m.getName());
             for (metroStop stop : s) {
-                final XYChart.Data<Integer, Integer> data = new XYChart.Data<>((int) stop.getCoord(), (int) Math.floor(stop.getYcoord()));
+                final XYChart.Data<Integer, Integer> data = new XYChart.Data<>((int) stop.getCoord(), (int) stop.getYcoord());
                 data.setNode(
                         new HoverNode(stop.getLine1() + " + " + stop.getLine2() + " in " + stop.getYear())
                 );
@@ -63,12 +63,6 @@ public class metroMapDemo extends Application {
                     m.getName(),
                     FXCollections.observableArrayList(dataset)));
         }
-//            final LineChart lineChart =
-//                    new LineChart(new NumberAxis(2005, 2017.0, 1), new NumberAxis(),
-//                            FXCollections.observableArrayList(
-//                                    new XYChart.Series(
-//                                            "MetroMap",
-//                                            FXCollections.observableArrayList(dataset))));
 
             lineChart.setBackground(null);
             lineChart.setCursor(Cursor.CROSSHAIR);
