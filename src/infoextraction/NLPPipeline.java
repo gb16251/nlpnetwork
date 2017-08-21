@@ -87,6 +87,8 @@ public class NLPPipeline {
             network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network, filename, new Sentence(sentence).sentenceIndex());
         }
 //        network.printNetwork();
+        network.printNetWorkToFile(filename);
+
     }
 
     public void getAnnotationsFour (List<CoreMap> sentences) {
@@ -227,8 +229,20 @@ public class NLPPipeline {
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
         namedEntities = manageNamedEntities(namedEntities,s.sentenceIndex(),fileName);
+        namedEntities = removeDuplicates(namedEntities);
         return namedEntities;
     }
+
+    private List<String> removeDuplicates(List<String> ents){
+        List<String> newents = new ArrayList();
+       for(String s: ents){
+           if(!newents.contains(s)){
+               newents.add(s);
+           }
+       }
+       return newents;
+    }
+
 
     private List<String> manageNamedEntities(List<String> namedEntities,int index,String fileName){
         List <String> toDelete = new ArrayList<>();
@@ -248,7 +262,6 @@ public class NLPPipeline {
                 toDelete.add(s);
                 toAdd.add(corefResolution.checkIfExists(s));
             }
-
         }
         namedEntities.removeAll(toDelete);
         namedEntities.addAll(toAdd);

@@ -123,7 +123,7 @@ public class displayPipeline {
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("enron.gexf"));
+            ec.exportFile(new File("newwikiliborfixed2.gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;

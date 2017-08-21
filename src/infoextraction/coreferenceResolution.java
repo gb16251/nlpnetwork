@@ -18,35 +18,52 @@ import java.util.*;
  */
 public class coreferenceResolution {
     private PrintWriter out = new PrintWriter(System.out);
+    private acronymManager aManage = new acronymManager();
     private Map<referenceRecorder,referenceRecorder> corefs = new ArrayMap<>();
     private Annotation annotation;
     private List<String> allEntities = new ArrayList<>();
     private List<String> allEntitiesAbbreviations = new ArrayList<>();
     private HashMap<String,String> transformEntity = new HashMap<>();
+    private List<String> prepositions = Arrays.asList("a","the","an","of","in","with","on","at","for","to","by","and");
 
+
+    public coreferenceResolution(Annotation annotation,String fileName){
+        this.annotation = annotation;
+        getChains(fileName);
+    }
 
     public String wasTransformed(String s){
         if (transformEntity.get(s)!= null) return transformEntity.get(s);
         else return s;
     }
 
+
     public String isAbbrev(String s){
         if(s.toUpperCase().equals(s) && !s.contains(" ")) {
-            if (allEntitiesAbbreviations.contains(s)) {
-                transformEntity.put(s,allEntities.get(allEntitiesAbbreviations.indexOf(s)));
-                return allEntities.get(allEntitiesAbbreviations.indexOf(s));
+            String abbrev = getRidOfPeriods(s);
+            System.out.println(abbrev);
+            if (allEntitiesAbbreviations.contains(abbrev)) {
+                transformEntity.put(s,allEntities.get(allEntitiesAbbreviations.indexOf(abbrev)));
+                return allEntities.get(allEntitiesAbbreviations.indexOf(abbrev));
             }
         }
         return null;
     }
 
-//TODO: do more than
+    private String getRidOfPeriods(String s){
+        if(s.contains(".")) {
+            return aManage.splitOnPeriod(s);
+        }
+        return s;
+    }
+
+
     public String checkIfExists(String s){
         if (allEntities.contains(s)) {
-            for (String entity: allEntities){
-                if (entity.contains(s)){
-                    transformEntity.put(s,entity);
-                    return entity;
+            for (int i = 0; i< allEntities.indexOf(s);i++){
+                if (allEntities.get(i).contains(s)){
+                    transformEntity.put(s,allEntities.get(i));
+                    return allEntities.get(i);
                 }
             }
         }
@@ -54,21 +71,18 @@ public class coreferenceResolution {
     }
 
 
-    public coreferenceResolution(Annotation annotation,String fileName){
-        this.annotation = annotation;
-//        getChains(fileName);
-    }
+
 
     public String checkNERAssociation(referenceRecorder key){
         referenceRecorder val = checkMap(key);
-        try {
+        if(val!=null) {
             if (allEntities.contains(val.getReference())) {
                 transformEntity.put(key.getReference(), val.getReference());
                 return val.getReference();
             }
         }
-        catch (NullPointerException e){System.err.println("Reference must have a name.");}
         return null;
+
     }
 
     private referenceRecorder checkMap(referenceRecorder ref){
@@ -83,9 +97,33 @@ public class coreferenceResolution {
         return null;
     }
 
-//    private getMatchingReference(re)
 
+    public String abbrevWithNoPrep(String s){
+        for(int i = 0; i<= allEntities.indexOf(s);i++) {
+            String m = aManage.splitString(removeStopWords(allEntities.get(i)));
+            if (m != null) {
+                if (m.equals(s)) {
+                    return allEntities.get(i);
+                }
+            }
+        }
+        return s;
+    }
 
+    public String removeStopWords(String word){
+        for (String s: prepositions){
+            if (word.contains(" " + s + " ")) {
+                word = word.replace(" " + s + " ", " ");
+            }
+            else if (word.contains(s + " ")) {
+                word = word.replace(s + " ", "");
+            }
+            else if (word.contains(" " + s)) {
+                word = word.replace(" " + s, "");
+            }
+        }
+        return word;
+    }
 
 
     private void getNamedEntities(List<CoreMap> sentences){
@@ -111,7 +149,6 @@ public class coreferenceResolution {
     }
 
     private void getAbbreviations(){
-        acronymManager aManage = new acronymManager();
         for(String entity: allEntities){
             allEntitiesAbbreviations.add(aManage.splitString(entity));
         }
@@ -163,6 +200,74 @@ public class coreferenceResolution {
             System.out.print("->");
             System.out.println(value.getReference());
         }
+    }
+
+    public String getBestMatch(String s){
+        List<String> possibleMatches = new ArrayList<>();
+        String[] words = aManage.getArray(s);
+        int len = words.length;
+        for (int i = 0; i< allEntities.indexOf(s); i++){
+            String[] entity = aManage.getArray(allEntities.get(i));
+            int entlen = entity.length;
+            if (len<entlen){
+                int matchingTokens = countMatchingTokens(words,allEntities.get(i));
+                if(len == matchingTokens ){
+                    possibleMatches.add((allEntities.get(i)));
+                }
+            }
+        }
+        return s;
+    }
+
+
+    public String getEditDistanceMatch(String s){
+        int minEditD = 1000;
+        String bestMatch = "";
+        String toCompare = createString(aManage.getArray(s));
+
+        for (int i = 0; i<allEntities.indexOf(s);i++){
+            String[] entArray = aManage.getArray(allEntities.get(i));
+            System.out.println(allEntities.get(i));
+            String entity = createString(entArray);
+            int editD = aManage.computeLevenshteinDistance(toCompare,entity);
+            System.out.println((double)editD);
+            System.out.println((double)getMinString(toCompare,entity)/5);
+            if((double)editD < (double)getMinString(toCompare,entity)/5 ){
+
+                if(editD<minEditD){
+                    minEditD = editD;
+                    bestMatch = allEntities.get(i);
+                }
+            }
+        }
+        return bestMatch;
+    }
+
+    private int getMinString(String a, String b){
+        if(a.length() > b.length()) return b.length();
+        return a.length();
+    }
+
+    private String createString(String[] words){
+        String result = "";
+        if(words!=null) {
+            for (String s : words) {
+                if(s.length()!= 0) {
+                    result += s;
+                }
+            }
+        }
+        return result;
+    }
+
+    private int countMatchingTokens(String[] words, String s){
+        int i = 0;
+        for (String match: words){
+            if (s.contains(match)){
+                i++;
+            }
+        }
+        return i;
     }
 
 

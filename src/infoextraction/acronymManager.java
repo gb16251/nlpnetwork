@@ -5,6 +5,19 @@ package infoextraction;
  */
 public class acronymManager {
 
+    public String[] getArray(String s){
+        if (s.contains(" ") && !s.contains(".")) {
+            String[] words =  s.split(" ");
+            return words;
+        }
+        if(s.contains(".") && !s.contains(" ")) {
+            String[] words2 =  s.split("\\.");
+            return words2;
+        }
+        return null;
+
+    }
+
     public String splitString(String s){
         if (s.contains(" ") && !s.contains(".")) return splitOnSpace(s);
         if(s.contains(".") && !s.contains(" ")) return splitOnPeriod(s);

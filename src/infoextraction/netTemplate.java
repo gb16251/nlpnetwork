@@ -1,6 +1,12 @@
 package infoextraction;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -103,8 +109,9 @@ public class netTemplate {
 
     public void printNetwork(){
         for (connex con: cons){
+            System.out.print("[");
             System.out.print(nodes.get(con.getFirst()));
-            System.out.print(" ");
+            System.out.print(",");
             System.out.print(nodes.get(con.getSecond()));
             System.out.print(" ");
             System.out.print(con.getDate());
@@ -112,8 +119,27 @@ public class netTemplate {
             System.out.print(con.getRel());
             System.out.print(" ");
             System.out.println(con.getFilename());
-
-
         }
     }
+    public void printNetWorkToFile(String filename) {
+        List<String> lines = getNetworkToPrint (filename);
+        Path file = Paths.get("the-file-name2.txt");
+        try {
+            Files.write(file, lines, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            System.err.print(e.getMessage());
+//Files.write(file, lines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
+        }
+    }
+
+    private List<String> getNetworkToPrint (String filename) {
+        List<String> e = new ArrayList<>();
+        e.add(filename);
+        for (connex con : cons) {
+            String s = "[" +nodes.get(con.getFirst())+ "," + nodes.get(con.getSecond()) + "," + con.getDate() + "," + con.getRel() +"]";
+            e.add(s);
+        }
+        return e;
+    }
+
 }

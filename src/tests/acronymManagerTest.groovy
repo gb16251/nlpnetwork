@@ -12,6 +12,8 @@ class acronymManagerTest extends GroovyTestCase {
         assert(am.splitString("march.")== null);
         assert(am.splitString("ma rch.")== null);
         assert(am.splitString("m.a.r.c.h").equals("march"));
+        assert(am.splitString("U.S.").equals("US"));
+        assert(am.splitString("m.a.r.c.h.").equals("march"));
         assert(am.splitString("m a r c h").equals("march"));
         assert(am.splitString("Serious Fraud Office").equals("SFO"));
     }
