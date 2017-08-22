@@ -2,7 +2,9 @@ package metroMapMockup;
 
 import infoextraction.dateChecker;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,12 +14,43 @@ public class metroMap {
     private List<metroLine> lines = new ArrayList<>();
     private List<metroStop> stops = new ArrayList<>();
     private dateChecker dates = new dateChecker();
+    private double[] sortedYears = new double[1000];
+
+
+
+    private void sortLineStops(){
+        provideStops();
+        for(metroLine m: lines){
+            m.sortList();
+//            m.PrintSortedYears();
+        }
+    }
+    private void provideStops(){
+        for(metroStop m: stops){
+            addStopToLine(m.getLine1(),m);
+            addStopToLine(m.getLine2(),m);
+        }
+    }
+    private void addStopToLine(String s, metroStop stop){
+        for(metroLine line: lines){
+            if(line.getName().equals(s)){
+                line.addStop(stop);
+                return;
+            }
+        }
+    }
+
 
     public metroMap(List<metroLine> lines,List<metroStop> stops){
         this.lines = lines;
         this.stops = stops;
         manageCoord();
         setYcoord();
+        sortLineStops();
+    }
+
+    public List<metroStop> getStops() {
+        return stops;
     }
 
     public void setYcoord(){
@@ -30,10 +63,10 @@ public class metroMap {
         return lines;
     }
 
-    public List<metroStop> getSpecificStops(String string){
+    public List<metroStop> getSpecificStops(String st){
         List<metroStop> sp = new ArrayList<>();
         for(metroStop s: stops){
-            if(s.getLine1().equals(string) || s.getLine2().equals(string))
+            if(s.getLine1().equals(st) || s.getLine2().equals(st))
                 sp.add(s);
         }
         return sp;

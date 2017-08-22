@@ -364,13 +364,17 @@ public class graphDbPipeline {
     public  List<metroStop> getMetroStops() {
         List<metroStop> stops = new ArrayList<>();
         try (Transaction tx = graphDb.beginTx()) {
+            int i = 0;
             Iterable<Relationship> rels =  graphDb.getAllRelationships();
             for(Relationship r: rels){
                 if (r.hasProperty("date")) {
                     if (r.getProperty("date").toString().length() > 0){
                         stops.add(new metroStop(r.getEndNode().getProperty("entity").toString(),
                                 r.getStartNode().getProperty("entity").toString(),
-                                (r.getProperty("date").toString())));
+                                (r.getProperty("date").toString()),
+                                r.getProperty("relationship").toString(),
+                                i));
+                        i++;
                     }
                 }
             }

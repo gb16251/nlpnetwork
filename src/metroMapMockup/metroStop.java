@@ -7,8 +7,28 @@ public class metroStop {
     private String year;
     private String line1;
     private String line2;
+    private String relationship;
     private double ycoord;
     private double coord;
+    private int id;
+    private String added;
+
+    public void setAdded(String added) {
+        this.added = added;
+    }
+
+    public String getAdded() {
+        return added;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getRelationship() {
+        return relationship;
+    }
+
 
     public double getCoord() {
         return coord;
@@ -26,10 +46,12 @@ public class metroStop {
         this.coord = coord;
     }
 
-    public metroStop(String line1, String line2, String year){
+    public metroStop(String line1, String line2, String year,String relationship, int id){
         this.year = year;
         this.line1 = line1;
         this.line2 = line2;
+        this.relationship = relationship;
+        this.id = id;
     }
 
     public String getLine1() {
