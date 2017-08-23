@@ -41,7 +41,10 @@ public class NLPPipeline {
     public void startPipeLine(){
         openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, coref,depparse,natlog,openie");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, dcoref,depparse,natlog,openie");
+//        props.setProperty("coref.language", "en");
+//        props.setProperty("coref.algorithm", "neural");
+        //"statistical" : "neural"
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 //        List<String> texts = new ArrayList<>();
         List <fileRecorder> fileRec = filestream.getText();
