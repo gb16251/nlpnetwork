@@ -25,7 +25,7 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/newwikilibor3/neo4j-store" );
+    private static final File DB_PATH = new File( "databases/demo2/neo4j-store" );
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -40,6 +40,7 @@ public class graphDbPipeline {
         registerShutdownHook();
 
     }
+
 
     public void initializeGraphDB() throws IOException{
         FileUtils.deleteRecursively( DB_PATH );
@@ -109,6 +110,7 @@ public class graphDbPipeline {
                 Relationship rel = first.createRelationshipTo(second, RelTypes.INTERACTION);
                 rel.setProperty("date", date);
                 rel.setProperty("relationship", relationshipName);
+                rel.setProperty("document", filename);
                 tx.success();
             }
         }
@@ -268,6 +270,7 @@ public class graphDbPipeline {
                 if (r.getType().name().equals("MATCHES")) {
                     edgeContainer e = new edgeContainer(r.getEndNode().getProperty("entity").toString(),
                             r.getStartNode().getProperty("entity").toString(),
+                            r.getProperty("files").toString(),
                             Integer.parseInt(r.getProperty("matches").toString()));
                     edges.add(e);
 //                    System.out.println(r.getEndNode().getProperty("entity").toString());

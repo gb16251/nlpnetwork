@@ -21,6 +21,7 @@ import org.gephi.appearance.api.AppearanceModel;
 import org.gephi.appearance.api.Function;
 import org.gephi.appearance.plugin.RankingElementColorTransformer;
 import org.gephi.appearance.plugin.RankingNodeSizeTransformer;
+import org.gephi.appearance.plugin.UniqueElementColorTransformer;
 import org.gephi.graph.api.*;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.layout.plugin.AutoLayout;
@@ -33,6 +34,7 @@ import org.gephi.preview.api.PreviewProperty;
 import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
+import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -86,9 +88,9 @@ public class displayPipeline {
             Edge edge = graphModel.factory().newEdge(undirectedGraph.getNode(e.getNode1()),
                     undirectedGraph.getNode(e.getNode2()),0,false);
             edge.setAttribute("matches",e.getMatches());
+            edge.setAttribute("documents",e.getDocument());
             undirectedGraph.addEdge(edge);
         }
-
     }
     private void startDB(){
         database.readDatabase();
@@ -103,6 +105,8 @@ public class displayPipeline {
         graphModel = Lookup.getDefault().lookup(GraphController.class).getGraphModel(workspace);
         graphModel.getNodeTable().addColumn("mentions", Integer.class);
         graphModel.getEdgeTable().addColumn("matches",Integer.class);
+        graphModel.getEdgeTable().addColumn("documents",String.class);
+
         undirectedGraph = graphModel.getUndirectedGraph();
     }
 
@@ -123,7 +127,7 @@ public class displayPipeline {
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("newwikiliborfixed2.gexf"));
+            ec.exportFile(new File("demoFullFolder.gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
@@ -154,10 +158,8 @@ public class displayPipeline {
         colourManager colors = new colourManager();
         for (Node n: undirectedGraph.getNodes()){
             n.setColor(new Color(colors.createSineWaves(n.getAttribute("mentions").toString())));
-//            n.setR(0.2f);
-//            n.setG(0.3f);
-//            n.setB(0.7f);
         }
+
     }
 
     private void manageedgeThickness(){
@@ -180,7 +182,7 @@ public class displayPipeline {
         //Export
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("autolayout.gexf"));
+            ec.exportFile(new File("sony.gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -34,7 +34,7 @@ public class NLPPipeline {
 
     public static void main(String[] args) {
         NLPPipeline pipe = new NLPPipeline();
-//        pipe.startDB();
+        pipe.startDB();
         pipe.startPipeLine();
     }
 
@@ -46,10 +46,7 @@ public class NLPPipeline {
 //        props.setProperty("coref.algorithm", "neural");
         //"statistical" : "neural"
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-//        List<String> texts = new ArrayList<>();
         List <fileRecorder> fileRec = filestream.getText();
-        //        List<String> texts = filestream.getText();
-
         for (fileRecorder file : fileRec){
             processText(file,pipeline);
         }
@@ -65,29 +62,30 @@ public class NLPPipeline {
         corefResolution = new coreferenceResolution(document,file.getTitle());
         getAnnotations(sentences,file.getTitle());
         corefResolution.printCorefs();
-//        insertToDatabase(network);
+        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences,String filename) {
         for (CoreMap sentence : sentences) {
+            Sentence sent = new Sentence(sentence);
             Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-//            for (RelationTriple triple : triples) {
-//                System.out.println(triple.confidence + "\t" +
-//                        triple.subjectLemmaGloss() + "\t" +
-//                        triple.relationLemmaGloss() + "\t" +
-//                        triple.objectLemmaGloss());
-//            }
             List <String> entitiesList = new ArrayList<>();
+            entitiesList.addAll(corefResolution.getSentenceCorefs(sent.sentenceIndex()));
             entitiesList.addAll(addEntitiesToTemplate(sentence,filename));
-            for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                CoreLabel word = new CoreLabel(token);
-                referenceRecorder ref = new referenceRecorder(word.word(),word.sentIndex(),filename);
-                String poss = corefResolution.checkNERAssociation(ref);
-                if(poss!=null){
-                    entitiesList.add(poss);
-                }
+
+            List<String> newnamedEntities = corefResolution.manageNamedEntities(entitiesList,sent.sentenceIndex(),filename);
+            newnamedEntities = removeDuplicates(newnamedEntities);
+//            for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+//                CoreLabel word = new CoreLabel(token);
+//                referenceRecorder ref = new referenceRecorder(word.word(),word.sentIndex(),filename);
+//                String poss = corefResolution.checkNERAssociation(ref);
+//                if(poss!=null){
+//                    entitiesList.add(poss);
+//                }
+//            }
+            if(newnamedEntities.size()>1) {
+                network = createPairsWithRel(newnamedEntities, getTimeStamps(sentence), triples, network, filename, sent.sentenceIndex());
             }
-            network = createPairsWithRel(entitiesList,getTimeStamps(sentence),triples, network, filename, new Sentence(sentence).sentenceIndex());
         }
 //        network.printNetwork();
         network.printNetWorkToFile(filename);
@@ -138,18 +136,15 @@ public class NLPPipeline {
         calculatePreRec F1 = new calculatePreRec(ideal,network);
         System.out.print("F1 score: ");
         System.out.println(F1.getF1());
-
         variableOptimizer vO = new variableOptimizer();
         averageCalculator alpha = new averageCalculator();
         averageCalculator beta = new averageCalculator();
         averageCalculator gamma = new averageCalculator();
-
         for (variableTriples var:vO.getVt()){
             networkComparator nC = new networkComparator(var.getA(),var.getB(),var.getC(),ideal,network);
             alpha.addItem(var.getA(),(int)nC.calculatePositiveScore());
             beta.addItem(var.getB(),(int)nC.calculatePositiveScore());
             gamma.addItem(var.getC(),(int)nC.calculatePositiveScore());
-
         }
         return alpha.getResults();
     }
@@ -209,8 +204,8 @@ public class NLPPipeline {
     }
 
     private boolean containsEntities(String a,String b, RelationTriple rel){
-        a = corefResolution.wasTransformed(a);
-        b = corefResolution.wasTransformed(b);
+        a = corefResolution.wasTransformedforRelations(a);
+        b = corefResolution.wasTransformedforRelations(b);
         if(rel.objectLemmaGloss().equals(a) && rel.subjectLemmaGloss().equals(b)) return true;
         if(rel.objectLemmaGloss().equals(b) && rel.subjectLemmaGloss().equals(a)) return true;
         return false;
@@ -231,45 +226,20 @@ public class NLPPipeline {
         namedEntities.addAll(s.mentions("PERSON"));
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
-        namedEntities = manageNamedEntities(namedEntities,s.sentenceIndex(),fileName);
-        namedEntities = removeDuplicates(namedEntities);
         return namedEntities;
     }
 
     private List<String> removeDuplicates(List<String> ents){
-        List<String> newents = new ArrayList();
-       for(String s: ents){
-           if(!newents.contains(s)){
-               newents.add(s);
-           }
-       }
-       return newents;
-    }
-
-
-    private List<String> manageNamedEntities(List<String> namedEntities,int index,String fileName){
-        List <String> toDelete = new ArrayList<>();
-        List <String> toAdd = new ArrayList<>();
-        for (String s: namedEntities){
-            referenceRecorder ref = new referenceRecorder(s,index,fileName);
-            String original = corefResolution.checkNERAssociation(ref);
-            if(original!=null){
-                toDelete.add(s);
-                toAdd.add(original);
-            }
-            else if (corefResolution.isAbbrev(s)!=null){
-                toDelete.add(s);
-                toAdd.add(corefResolution.isAbbrev(s));
-            }
-            else if (corefResolution.checkIfExists(s)!= null){
-                toDelete.add(s);
-                toAdd.add(corefResolution.checkIfExists(s));
+        List<String> newents = new ArrayList<>();
+        for(String s: ents){
+            if(!newents.contains(s) && s!=null){
+                newents.add(s);
             }
         }
-        namedEntities.removeAll(toDelete);
-        namedEntities.addAll(toAdd);
-        return namedEntities;
+        return newents;
     }
+
+
     public List<String> getTimeStamps(CoreMap sentence ) {
         List<String> timeStamps;
         Sentence s = new Sentence(sentence);

@@ -24,6 +24,8 @@ class coreferenceResolutionTest extends GroovyTestCase {
         assert (corefs.removeStopWords("Bank of England").equals("Bank England"))
         assert (corefs.abbrevWithNoPrep("BE").equals("Bank of England"))
         assert (corefs.abbrevWithNoPrep("RBS").equals("Royal Bank of Scotland"))
+        assert (corefs.abbrevWithNoPrep("BLA") == null)
+
         assert(corefs.checkIfExists("Royal Bank").equals("Royal Bank of Scotland"))
         assert (corefs.getEditDistanceMatch("British Bankers ' Association"). equals("British Bankers Association"))
 

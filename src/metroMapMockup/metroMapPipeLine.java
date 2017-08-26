@@ -62,7 +62,7 @@ public class metroMapPipeLine {
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("metromaptrial11.gexf"));
+            ec.exportFile(new File("demo2MetroMapFull.gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
@@ -158,6 +158,7 @@ public class metroMapPipeLine {
                 edge.setWeight(20);
                 id++;
                 lastNodeId = Integer.toString(s.getId());
+                edge.setLabel(m.getName());
                 edge.setAttribute("entity", m.getName());
                 undirectedGraph.addEdge(edge);
             }

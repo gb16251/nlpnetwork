@@ -6,12 +6,18 @@ package graphDisplay;
 public class edgeContainer {
     private String node1 = "";
     private String node2 = "";
+    private String document = "";
     private int matches;
 
-    public edgeContainer(String node1,String node2,int matches){
+    public edgeContainer(String node1,String node2,String document, int matches){
         this.node1 = node1;
         this.node2 = node2;
         this.matches = matches;
+        this.document = document;
+    }
+
+    public String getDocument() {
+        return document;
     }
 
     public String getNode1() {

@@ -11,7 +11,7 @@ import java.util.List;
 //This class opens and reads the files that will be processed further on
 public class openFiles {
     private PrintStream ps = new PrintStream(System.out);
-    private String path = "D:/openie for conflicts of interest/resrc/set4";
+    private String path = "D:/openie for conflicts of interest/resrc/set1";
     private String sp = ",";
     private String nl = "\n";
 
