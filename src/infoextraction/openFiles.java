@@ -11,13 +11,17 @@ import java.util.List;
 //This class opens and reads the files that will be processed further on
 public class openFiles {
     private PrintStream ps = new PrintStream(System.out);
-    private String path = "D:/openie for conflicts of interest/resrc/set1";
+    private String path = "D:/openie for conflicts of interest/resrc/evaluationFolder";
     private String sp = ",";
     private String nl = "\n";
 
+    public openFiles(String path){
+        this.path = path;
+    }
     private List<String> getFiles() {
         List<String> results = new ArrayList<String>();
         File[] files = new File(path).listFiles();
+        System.out.println(path);
         if (files == null){
             throw new Error("No files in the given folder. Please check that you entered a valid directory and try again!");
         }
@@ -62,11 +66,7 @@ public class openFiles {
 //        ps.println(fileoutput);
         return fileoutput;
     }
-    public static void main(String[] args) {
-        openFiles fileopener = new openFiles();
-        fileopener.getText();
 
-    }
 }
 
 

@@ -5,6 +5,7 @@ import infoextraction.dateChecker;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -13,9 +14,55 @@ import java.util.List;
 public class metroMap {
     private List<metroLine> lines = new ArrayList<>();
     private List<metroStop> stops = new ArrayList<>();
+    private List<metroStop> reducedStops = new ArrayList<>();
     private dateChecker dates = new dateChecker();
-    private double[] sortedYears = new double[1000];
+    HashMap<String,Integer> rels = new HashMap<>();
 
+
+
+    public metroMap(List<metroLine> lines,List<metroStop> stops){
+        this.lines = lines;
+        this.stops = stops;
+        manageCoord();
+        setYcoord();
+        createReducedList();
+        sortLineStops();
+    }
+    private void manageNewIds(){
+        for(metroStop s: stops){
+            s.setNewId((int)s.getCoord() + rels.get(s.getRelationship()));
+        }
+    }
+
+    public List<metroStop> getReducedStops() {
+        return reducedStops;
+    }
+
+    private void addRelsHash(){
+        int i = 0;
+        for(metroStop m : stops){
+            rels.putIfAbsent(m.getRelationship(),i);
+            i++;
+        }
+    }
+
+
+    private boolean doesStopExist(String year, String relation){
+        for(metroStop s : reducedStops){
+            if(s.getYear().equals(year) && s.getRelationship().equals(relation)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void createReducedList(){
+        for(metroStop s: stops){
+            if(!doesStopExist((s.getYear()),s.getRelationship())){
+                reducedStops.add(s);
+            }
+        }
+    }
 
 
     private void sortLineStops(){
@@ -41,13 +88,6 @@ public class metroMap {
     }
 
 
-    public metroMap(List<metroLine> lines,List<metroStop> stops){
-        this.lines = lines;
-        this.stops = stops;
-        manageCoord();
-        setYcoord();
-        sortLineStops();
-    }
 
     public List<metroStop> getStops() {
         return stops;

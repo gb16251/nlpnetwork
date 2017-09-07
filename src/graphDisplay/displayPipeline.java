@@ -46,12 +46,18 @@ import static org.neo4j.server.rest.transactional.ResultDataContent.graph;
 
 
 public class displayPipeline {
-    private graphDbPipeline database = new graphDbPipeline();
+    private graphDbPipeline database;
+    private String fileName;
     colourManager colour = new colourManager();
     GraphModel graphModel;
     UndirectedGraph undirectedGraph;
     PreviewModel preview;
 
+
+    public displayPipeline(graphDbPipeline database,String filename){
+        this.database = database;
+        this.fileName = filename;
+    }
     private void setPreview(){
         preview = Lookup.getDefault().lookup(PreviewController.class).getModel();
         preview.getProperties().putValue(PreviewProperty.EDGE_COLOR,new EdgeColor(Color.GREEN));
@@ -92,9 +98,9 @@ public class displayPipeline {
             undirectedGraph.addEdge(edge);
         }
     }
-    private void startDB(){
-        database.readDatabase();
-    }
+//    private void startDB(){
+//        database.readDatabase();
+//    }
     private void initializeWorkSpace(){
         //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
@@ -110,8 +116,7 @@ public class displayPipeline {
         undirectedGraph = graphModel.getUndirectedGraph();
     }
 
-    private void createDisplay(){
-        startDB();
+    public void createDisplay(){
         initializeWorkSpace();
         getNodes();
         manageEdges();
@@ -127,7 +132,7 @@ public class displayPipeline {
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("demoFullFolder.gexf"));
+            ec.exportFile(new File("gephi/" + fileName +".gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
@@ -189,10 +194,4 @@ public class displayPipeline {
     }
 
 
-
-    public static void main(String args[]) {
-        displayPipeline display = new displayPipeline();
-        display.createDisplay();
-    }
-
-    }
+}

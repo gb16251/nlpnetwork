@@ -25,7 +25,7 @@ import java.util.List;
  * Created by Gabriela on 22-Jun-17.
  */
 public class graphDbPipeline {
-    private static final File DB_PATH = new File( "databases/demo2/neo4j-store" );
+    private static File DB_PATH;
     private static final String NAME_KEY = "neo4j";
     private static GraphDatabaseService graphDb;
     private static Index<Node> entities;
@@ -35,6 +35,11 @@ public class graphDbPipeline {
         INTERACTION,
         MATCHES
     }
+    public graphDbPipeline(String fileName){
+        String s = "databases/" + fileName;
+        DB_PATH = new File( s);
+    }
+
     public void readDatabase(){
         graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
         registerShutdownHook();
@@ -370,15 +375,17 @@ public class graphDbPipeline {
             int i = 0;
             Iterable<Relationship> rels =  graphDb.getAllRelationships();
             for(Relationship r: rels){
-                if (r.hasProperty("date")) {
-                    if (r.getProperty("date").toString().length() > 0){
-                        stops.add(new metroStop(r.getEndNode().getProperty("entity").toString(),
+                if (r.hasProperty("date") || r.hasProperty("relationship")) {
+                    String date = "0";
+                    if (r.getProperty("date").toString().length() > 0) {
+                         date = r.getProperty("date").toString();
+                    }
+                    stops.add(new metroStop(r.getEndNode().getProperty("entity").toString(),
                                 r.getStartNode().getProperty("entity").toString(),
-                                (r.getProperty("date").toString()),
+                                date,
                                 r.getProperty("relationship").toString(),
                                 i));
-                        i++;
-                    }
+                    i++;
                 }
             }
             tx.success();

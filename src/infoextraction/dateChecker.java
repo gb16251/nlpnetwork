@@ -56,9 +56,13 @@ public class dateChecker {
     }
 
     public double getYearMonth(String s){
+//        System.out.println(s);
         String words[] = checkIfNeedsToSplit(s);
         if (words == null) {
-            if(isYear(s)){return Double.parseDouble(s);}
+            if(isYear(s)){
+                System.out.println(Double.parseDouble(s));
+                return Double.parseDouble(s);
+            }
             if (isMonth(s)){return -0.1;}
         }
         else{
@@ -88,10 +92,10 @@ public class dateChecker {
 //            discovering too many things that have not actually happened yet
 //            can result in too much noise.
     private boolean isYear(String s) {
-        int year = Year.now().getValue() + 3;
+        int year = Year.now().getValue() + 4;
         if (isDigits(s)) {
             int potentialYear = Integer.parseInt(s);
-            if (potentialYear <= year && potentialYear > 1300) {
+            if (potentialYear <= year && potentialYear > 1800) {
                 return true;
             }
         }
@@ -101,7 +105,9 @@ public class dateChecker {
     private boolean isDigits(String s) {
         for (int i = 0; i <= s.length() - 1; i++) {
             if (s.charAt(i) > '9' || s.charAt(i) < '0') {
-                return false;
+                if(s.charAt(i)!= ' ') {
+                    return false;
+                }
             }
         }
         return true;

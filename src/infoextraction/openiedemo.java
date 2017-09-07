@@ -24,7 +24,7 @@ public class openiedemo {
 
     public static void main(String[] args) throws Exception {
         openiedemo demo = new openiedemo();
-        openFiles filestream = new openFiles();
+        openFiles filestream = new openFiles("");
         // Create the Stanford CoreNLP pipeline
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize,ssplit,pos,lemma,parse,depparse,natlog,openie");

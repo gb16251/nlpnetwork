@@ -29,7 +29,7 @@ public class charts extends Application {
         XYChart.Series series = new XYChart.Series();
         series.setName("Evaluation template");
         //populating the series with data
-        NLPPipeline pipe = new NLPPipeline();
+        NLPPipeline pipe = new NLPPipeline(null);
         pipe.startPipeLine();
         int[] results =  pipe.evalNetwork();
         for (int i = 0; i<=100;i++){

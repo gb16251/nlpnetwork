@@ -1,6 +1,8 @@
 package infoextraction; /**
  * Created by Gabriela on 14-Jun-17.
  */
+import edu.stanford.nlp.ie.machinereading.structure.MachineReadingAnnotations;
+import edu.stanford.nlp.ie.machinereading.structure.RelationMention;
 import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -20,33 +22,29 @@ import java.util.*;
 //Java Heap Space: -Xms1024m -Xmx4024m
 public class NLPPipeline {
     private PrintStream ps = new PrintStream(System.out);
-    private graphDbPipeline database = new graphDbPipeline();
     private netTemplate network = new netTemplate();
     private coreferenceResolution corefResolution;
+    private int currentSent = 1;
+    List <fileRecorder> fileRec;
 
-
-    private void startDB(){
-        try {
-           database.initializeGraphDB();
-        }
-        catch (IOException e ){}
+    public NLPPipeline(List<fileRecorder> fileRec){
+        this.fileRec = fileRec;
+        startPipeLine();
     }
 
-    public static void main(String[] args) {
-        NLPPipeline pipe = new NLPPipeline();
-        pipe.startDB();
-        pipe.startPipeLine();
+    public netTemplate getNetwork() {
+        return network;
     }
 
     public void startPipeLine(){
-        openFiles filestream = new openFiles();
+//        openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, dcoref,depparse,natlog,openie");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, dcoref,depparse,relation,natlog,openie");
 //        props.setProperty("coref.language", "en");
 //        props.setProperty("coref.algorithm", "neural");
         //"statistical" : "neural"
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        List <fileRecorder> fileRec = filestream.getText();
+//        fileRec = filestream.getText();
         for (fileRecorder file : fileRec){
             processText(file,pipeline);
         }
@@ -59,37 +57,28 @@ public class NLPPipeline {
         // run all Annotators on this text
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        corefResolution = new coreferenceResolution(document,file.getTitle());
+        corefResolution = new coreferenceResolution(document,file.getTitle(),currentSent);
         getAnnotations(sentences,file.getTitle());
         corefResolution.printCorefs();
-        insertToDatabase(network);
     }
 
     public void getAnnotations (List<CoreMap> sentences,String filename) {
+        network = new netTemplate();
         for (CoreMap sentence : sentences) {
             Sentence sent = new Sentence(sentence);
             Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+            List<RelationMention> relMentions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
             List <String> entitiesList = new ArrayList<>();
             entitiesList.addAll(corefResolution.getSentenceCorefs(sent.sentenceIndex()));
             entitiesList.addAll(addEntitiesToTemplate(sentence,filename));
-
             List<String> newnamedEntities = corefResolution.manageNamedEntities(entitiesList,sent.sentenceIndex(),filename);
             newnamedEntities = removeDuplicates(newnamedEntities);
-//            for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-//                CoreLabel word = new CoreLabel(token);
-//                referenceRecorder ref = new referenceRecorder(word.word(),word.sentIndex(),filename);
-//                String poss = corefResolution.checkNERAssociation(ref);
-//                if(poss!=null){
-//                    entitiesList.add(poss);
-//                }
-//            }
             if(newnamedEntities.size()>1) {
-                network = createPairsWithRel(newnamedEntities, getTimeStamps(sentence), triples, network, filename, sent.sentenceIndex());
+                network = createPairsWithRel(newnamedEntities, getTimeStamps(sentence), triples, network, filename, currentSent,relMentions);
             }
+            currentSent++;
         }
-//        network.printNetwork();
         network.printNetWorkToFile(filename);
-
     }
 
     public void getAnnotationsFour (List<CoreMap> sentences) {
@@ -149,12 +138,6 @@ public class NLPPipeline {
         return alpha.getResults();
     }
 
-    public void insertToDatabase(netTemplate network ){
-        for (conTemplate con: network.getConnections()){
-            database.addAdvancedConnection(con.getNode1(),con.getNode2(),con.getDate(),con.getFilename(),con.getRel(),con.getSentence());
-        }
-
-    }
 //    Add to tests structures - no relations, just enttiies
     public List<String> addEntitiesToTemplate(CoreMap sentence,String fileName){
         List<String> ents = new ArrayList<>();
@@ -180,21 +163,57 @@ public class NLPPipeline {
                                             Collection<RelationTriple> triples,
                                             netTemplate net,
                                             String filename,
-                                            int sentence) {
+                                            int sentence,
+                                            List<RelationMention> relMentions) {
         for (String s1:ents) {
+            System.out.println(sentence);
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
-                String rels = returnRelation(s1,ents.get(i),triples);
+                System.out.println(ents);
+                String rels = returnRelation(s1,ents.get(i),triples,sentence,filename);
+                String relsM = returnRelm(s1,ents.get(i),relMentions,sentence,filename);
                 net.addConnection(s1, ents.get(i), listToString(date),filename,rels,sentence);
+                if(rels.length()>0){
+                    net.addConnection(s1, ents.get(i), listToString(date),filename,relsM,sentence);
+                }
             }
         }
         return net;
     }
 
+    private String returnRelm(String a,String b, List<RelationMention> triples, int sentence, String filename){
+        String rels = "";
+        if(triples!=null) {
+            for (RelationMention m : triples) {
+                if (relmContainsEntities(a, b, m, sentence, filename)) {
+                    rels = m.getType();
+                    System.out.println(m.getType());
+                }
+            }
+        }
+        return rels;
+    }
 
-    private String returnRelation(String a,String b,Collection<RelationTriple> triples){
+    private boolean relmContainsEntities(String a,String b, RelationMention rel, int sentence, String filename){
+        boolean founda = false, foundb = false;
+        a = corefResolution.wasTransformedforRelations(a,sentence,filename);
+        b = corefResolution.wasTransformedforRelations(b,sentence,filename);
+        if(rel.getArgNames()!=null) {
+            for (String arg : rel.getArgNames()) {
+                if (arg.equals(a)) {
+                    founda = true;
+                }
+                if (arg.equals(b)) {
+                    foundb = true;
+                }
+            }
+        }
+        return founda && foundb;
+    }
+
+    private String returnRelation(String a,String b,Collection<RelationTriple> triples, int sentence, String filename){
         String rels = "";
         for (RelationTriple trip:triples){
-            if (containsEntities(a, b, trip)) {
+            if (containsEntities(a, b, trip, sentence,filename)) {
                 if(trip.relationLemmaGloss().length() > rels.length()){
                     rels = trip.relationLemmaGloss();
                 }
@@ -203,9 +222,9 @@ public class NLPPipeline {
         return rels;
     }
 
-    private boolean containsEntities(String a,String b, RelationTriple rel){
-        a = corefResolution.wasTransformedforRelations(a);
-        b = corefResolution.wasTransformedforRelations(b);
+    private boolean containsEntities(String a,String b, RelationTriple rel, int sentence, String filename){
+        a = corefResolution.wasTransformedforRelations(a,sentence,filename);
+        b = corefResolution.wasTransformedforRelations(b,sentence,filename);
         if(rel.objectLemmaGloss().equals(a) && rel.subjectLemmaGloss().equals(b)) return true;
         if(rel.objectLemmaGloss().equals(b) && rel.subjectLemmaGloss().equals(a)) return true;
         return false;
@@ -226,6 +245,8 @@ public class NLPPipeline {
         namedEntities.addAll(s.mentions("PERSON"));
         namedEntities.addAll(s.mentions("ORGANIZATION"));
         namedEntities.addAll(s.mentions("LOCATION"));
+        namedEntities.addAll(s.mentions("MISC"));
+
         return namedEntities;
     }
 
@@ -257,37 +278,6 @@ public class NLPPipeline {
         return dates;
     }
 
-        public void getNPs(List<CoreMap> sentences,StanfordCoreNLP pipeline){
-
-        for (CoreMap sentence : sentences) {
-            Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-            List<String> NPTags = Arrays.asList("#","NP-TMP","PDT","MD","RP","PRT","NP","VB","VBZ","WDT","WHPP","TO","ADJP","CD","VBP","WHNP","WP", "NN", "VP","RB","JJ","NNS","PP","PRP","VBG","VBD","DT","PRP$","NNP","NP","CC","VBN","POS","IN",",",".","EX","S","WRB","WHADVP","SBAR","ADVP");
-            for (Tree subtree: tree)
-            {
-                if(subtree.label().value().equals("VP"))
-                {
-                    for (Tree NP: subtree) {
-                        if (!NPTags.contains(NP.label().value())) {
-                            ps.print(NP.nodeString());
-                            ps.print(" ");
-                        }
-                    }
-                    ps.println();
-                }
-            }
-        }
-    }
-    public void getCleanTree(Tree tree) {
-        List<String> NPTags = Arrays.asList("#", "NP-TMP", "PDT", "MD", "RP", "PRT", "NP", "VB", "VBZ", "WDT", "WHPP", "TO", "ADJP", "CD", "VBP", "WHNP", "WP", "NN", "VP", "RB", "JJ", "NNS", "PP", "PRP", "VBG", "VBD", "DT", "PRP$", "NNP", "NP", "CC", "VBN", "POS", "IN", ",", ".", "EX", "S", "WRB", "WHADVP", "SBAR", "ADVP");
-        for (Tree subtree : tree) {
-            String s = "";
-            if (!NPTags.contains(subtree.label().value())) {
-                s += subtree.nodeString();
-                s += " ";
-            }
-            ps.print(s);
-        }
-    }
 
 
 }

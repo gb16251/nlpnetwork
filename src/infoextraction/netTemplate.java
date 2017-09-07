@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by Gabriela on 21-Jul-17.
@@ -22,6 +23,7 @@ public class netTemplate {
     public void addNode(String s){
         nodes.add(s);
     }
+
 
     public boolean hasNode(String s ){
         if(nodes.contains(s)) return true;
@@ -123,7 +125,8 @@ public class netTemplate {
     }
     public void printNetWorkToFile(String filename) {
         List<String> lines = getNetworkToPrint (filename);
-        Path file = Paths.get("the-file-name2.txt");
+        int randomNum = ThreadLocalRandom.current().nextInt(0, 3000);
+        Path file = Paths.get("D:/openie for conflicts of interest/networks/" + Integer.toString(randomNum) +".txt");
         try {
             Files.write(file, lines, Charset.forName("UTF-8"));
         } catch (IOException e) {

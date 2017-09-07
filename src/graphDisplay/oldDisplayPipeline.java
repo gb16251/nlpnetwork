@@ -9,7 +9,7 @@ import org.graphstream.graph.implementations.MultiGraph;
  * Created by Gabriela on 09-Aug-17.
  */
 public class oldDisplayPipeline {
-    private graphDbPipeline database = new graphDbPipeline();
+    private graphDbPipeline database = new graphDbPipeline("");
     Graph graph = new MultiGraph("tutorial 1");
     colourManager colour = new colourManager();
     private String styleSheet =

@@ -17,11 +17,15 @@ import java.util.*;
  * Created by Gabriela on 07-Jul-17.
  */
 public class coreferenceResolution {
-    private PrintWriter out = new PrintWriter(System.out);
+    private Map<referenceRecorder,String> recordChanges = new ArrayMap<>();
     private acronymManager aManage = new acronymManager();
     private Map<referenceRecorder,referenceRecorder> corefs = new ArrayMap<>();
     private Annotation annotation;
     private List<String> allEntities = new ArrayList<>();
+    private List<String> allLocations = new ArrayList<>();
+    private List<String> allOrganizations = new ArrayList<>();
+    private List<String> allPersons = new ArrayList<>();
+    private List<String> allMisc = new ArrayList<>();
     private List<String> allEntitiesAbbreviations = new ArrayList<>();
     private HashMap<String,String> transformEntity = new HashMap<>();
     private List<String> prepositions = Arrays.asList("a","the","an","of","in","with","on","at","for","to","by","and");
@@ -29,9 +33,9 @@ public class coreferenceResolution {
 //    Start of the process things
 
 //Constructor
-    public coreferenceResolution(Annotation annotation,String fileName){
+    public coreferenceResolution(Annotation annotation,String fileName, int currentSent){
         this.annotation = annotation;
-        getChains(fileName);
+        getChains(fileName,currentSent);
     }
 
 
@@ -39,9 +43,14 @@ public class coreferenceResolution {
     private void getNamedEntities(List<CoreMap> sentences){
         for (CoreMap sentence: sentences) {
             Sentence s = new Sentence(sentence);
-            allEntities.addAll(s.mentions("PERSON"));
-            allEntities.addAll(s.mentions("ORGANIZATION"));
-            allEntities.addAll(s.mentions("LOCATION"));
+            allPersons.addAll(s.mentions("PERSON"));
+            allEntities.addAll(allPersons);
+            allMisc.addAll(s.mentions("MISC"));
+            allEntities.addAll(allMisc);
+            allOrganizations.addAll(s.mentions("ORGANIZATION"));
+            allEntities.addAll(allOrganizations);
+            allLocations.addAll(s.mentions("LOCATION"));
+            allEntities.addAll(allLocations);
         }
     }
 
@@ -53,7 +62,7 @@ public class coreferenceResolution {
     }
 
     //    Get info at the beginning of the process
-    public void getChains(String fileName) {
+    public void getChains(String fileName,int currentSent) {
         List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
         getNamedEntities(sentences);
         getAbbreviations();
@@ -61,22 +70,21 @@ public class coreferenceResolution {
             Map<Integer, CorefChain> corefChains =
                     annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
             if (corefChains == null) { return; }
-            processText(corefChains,corefs,fileName);
+            processText(corefChains,corefs,fileName,currentSent);
         }
     }
+
+
 
     //    Generate corefchains
     private void processText(Map<Integer, CorefChain> corefChains,
                              Map<referenceRecorder,referenceRecorder> corefs,
-                             String fileName) {
+                             String fileName,
+                             int currentSent) {
         for (Map.Entry<Integer,CorefChain> entry: corefChains.entrySet()) {
             CorefChain.CorefMention repr = entry.getValue().getRepresentativeMention();
-//            out.println("Chain " + entry.getKey());
-//            out.print("Reprjf mention: ");
-//            out.println(repr.mentionSpan);
-//            out.println("--");
-            referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum,fileName);
-            createChain(corefs,repr,mapTo,entry,fileName);
+            referenceRecorder mapTo = new referenceRecorder(repr.mentionSpan,repr.sentNum + currentSent,fileName);
+            createChain(corefs,repr,mapTo,entry,fileName,currentSent);
         }
     }
 
@@ -84,9 +92,10 @@ public class coreferenceResolution {
     //    Create a new chain with my structure
     private void createChain(Map<referenceRecorder,referenceRecorder> corefs,CorefChain.CorefMention repr,
                              referenceRecorder mapTo,Map.Entry<Integer,CorefChain> entry,
-                             String fileName){
+                             String fileName,
+                             int currentSent){
         for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder()) {
-            referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum,fileName);
+            referenceRecorder key = new referenceRecorder(m.mentionSpan,repr.sentNum + currentSent,fileName);
             corefs.put(key,mapTo);
         }
     }
@@ -103,26 +112,115 @@ public class coreferenceResolution {
         for (String s: namedEntities){
             referenceRecorder ref = new referenceRecorder(s,index,fileName);
             String original = checkNERAssociation(ref);
-            if(wasTransformed(s)!=null){
-                toDelete.add(s);
-                toAdd.add(wasTransformed(s));
+            if(allLocations.contains(s)){
+                if(wasTransformed(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(wasTransformed(s));
+                }
+                else if (managePotentialAbbrev(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(managePotentialAbbrev(s));
+                }
+                else if (checkIfExists(s)!= null){
+                    toDelete.add(s);
+                    toAdd.add(checkIfExists(s));
+                }
+                else if(getEditDistanceMatch(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(getEditDistanceMatch(s));
+                }
+                else if(original!=null){
+                    toDelete.add(s);
+                    toAdd.add(original);
+                }
             }
-            else if (managePotentialAbbrev(s)!=null){
-                toDelete.add(s);
-                toAdd.add(managePotentialAbbrev(s));
+            else if(allOrganizations.contains(s)){
+                if(wasTransformed(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(wasTransformed(s));
+                }
+                else if (managePotentialAbbrev(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(managePotentialAbbrev(s));
+                }
+                else if (checkIfExists(s)!= null){
+                    toDelete.add(s);
+                    toAdd.add(checkIfExists(s));
+                }
+                else if(getEditDistanceMatch(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(getEditDistanceMatch(s));
+                }
+                else if(original!=null){
+                    toDelete.add(s);
+                    toAdd.add(original);
+                }
             }
-            else if (checkIfExists(s)!= null){
-                toDelete.add(s);
-                toAdd.add(checkIfExists(s));
+            else if(allPersons.contains(s)){
+                if(wasTransformed(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(wasTransformed(s));
+                }
+                if(namedBefore(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(namedBefore(s));
+                }
+                else if (checkIfExists(s)!= null){
+                    toDelete.add(s);
+                    toAdd.add(checkIfExists(s));
+                }
+                else if(getEditDistanceMatch(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(getEditDistanceMatch(s));
+                }
+                else if(original!=null){
+                    toDelete.add(s);
+                    toAdd.add(original);
+                }
             }
-            else if(getEditDistanceMatch(s)!=null){
-                toDelete.add(s);
-                toAdd.add(getEditDistanceMatch(s));
+             else if(allMisc.contains(s)){
+                if(wasTransformed(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(wasTransformed(s));
+                }
+                else if (managePotentialAbbrev(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(managePotentialAbbrev(s));
+                }
+                else if (checkIfExists(s)!= null){
+                    toDelete.add(s);
+                    toAdd.add(checkIfExists(s));
+                }
+                else if(getEditDistanceMatch(s)!=null){
+                    toDelete.add(s);
+                    toAdd.add(getEditDistanceMatch(s));
+                }
+                else if(original!=null){
+                    toDelete.add(s);
+                    toAdd.add(original);
+                }
             }
-            else if(original!=null){
-                toDelete.add(s);
-                toAdd.add(original);
-            }
+//
+//            if(wasTransformed(s)!=null){
+//                toDelete.add(s);
+//                toAdd.add(wasTransformed(s));
+//            }
+//            else if (managePotentialAbbrev(s)!=null){
+//                toDelete.add(s);
+//                toAdd.add(managePotentialAbbrev(s));
+//            }
+//            else if (checkIfExists(s)!= null){
+//                toDelete.add(s);
+//                toAdd.add(checkIfExists(s));
+//            }
+//            else if(getEditDistanceMatch(s)!=null){
+//                toDelete.add(s);
+//                toAdd.add(getEditDistanceMatch(s));
+//            }
+//            else if(original!=null){
+//                toDelete.add(s);
+//                toAdd.add(original);
+//            }
         }
         namedEntities.removeAll(toDelete);
         namedEntities.addAll(toAdd);
@@ -132,9 +230,31 @@ public class coreferenceResolution {
 
 
 // Did we find a coref for this NER earlier?
-    public String wasTransformedforRelations(String s){
-        if (transformEntity.get(s)!= null) return transformEntity.get(s);
+    public String wasTransformedforRelations(String s, int sentence, String fileName){
+        referenceRecorder ref = new referenceRecorder(s,sentence,fileName);
+        String val = checkNERAssociation(ref);
+        if (transformEntity.get(s)!= null) {
+            return transformEntity.get(s);
+        }
+        else if (val!=null){
+            return val;
+        }
         else return s;
+    }
+
+    private String namedBefore(String ent){
+        if(!ent.contains(" ")) {
+            for (int i = 0; i<allEntities.indexOf(ent); i++) {
+                String[] words = aManage.getArray(allEntities.get(i));
+                if(words!=null) {
+                    if (words.length > 1 && allEntities.get(i).contains(ent)) {
+                        transformEntity.put(ent, allEntities.get(i));
+                        return allEntities.get(i);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public String wasTransformed(String s){
@@ -177,6 +297,7 @@ public class coreferenceResolution {
             String m = aManage.splitString(removeStopWords(allEntities.get(i)));
             if (m != null) {
                 if (m.equals(s)) {
+                    transformEntity.put(s,allEntities.get(i));
                     return allEntities.get(i);
                 }
             }
@@ -220,7 +341,7 @@ public class coreferenceResolution {
         referenceRecorder val = checkMap(key);
         if(val!=null) {
             if (allEntities.contains(val.getReference())) {
-                transformEntity.put(key.getReference(), val.getReference());
+//                transformEntity.put(key.getReference(), val.getReference());
                 return val.getReference();
             }
         }
@@ -252,7 +373,6 @@ public class coreferenceResolution {
         for(Map.Entry<referenceRecorder, referenceRecorder> entry : corefs.entrySet()){
             if(entry.getKey().getSentence() == index){
                 if(allEntities.contains(entry.getValue().getReference())){
-                    System.out.println(entry.getValue().getReference());
                     references.add(entry.getValue().getReference());
                 }
             }
@@ -350,6 +470,7 @@ public class coreferenceResolution {
             referenceRecorder key = entry.getKey();
             referenceRecorder value = entry.getValue();
             System.out.print(key.getReference());
+            System.out.print(key.getSentence());
             System.out.print("->");
             System.out.println(value.getReference());
         }

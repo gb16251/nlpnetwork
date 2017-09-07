@@ -23,7 +23,7 @@ public class NEcounter {
 
 
     public void startPipeLine(){
-        openFiles filestream = new openFiles();
+        openFiles filestream = new openFiles("");
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);

@@ -5,7 +5,7 @@ package infoextraction;
  */
 public class floodFill {
     public static void main(String[] args) {
-        graphDbPipeline db = new graphDbPipeline();
+        graphDbPipeline db = new graphDbPipeline("");
         db.readDatabase();
         System.out.println(db.countDisconnectedGraphs());
     }

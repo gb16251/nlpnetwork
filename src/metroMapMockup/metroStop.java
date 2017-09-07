@@ -1,5 +1,9 @@
 package metroMapMockup;
 
+import edu.stanford.nlp.util.ArraySet;
+
+import java.util.Set;
+
 /**
  * Created by Gabriela on 15-Aug-17.
  */
@@ -11,6 +15,8 @@ public class metroStop {
     private double ycoord;
     private double coord;
     private int id;
+    private int newId = -1;
+    private Set<String> entities = new ArraySet<>();
     private String added;
 
     public void setAdded(String added) {
@@ -19,6 +25,14 @@ public class metroStop {
 
     public String getAdded() {
         return added;
+    }
+
+    public int getNewId() {
+        return newId;
+    }
+
+    public void setNewId(int newId) {
+        this.newId = newId;
     }
 
     public int getId() {
