@@ -16,33 +16,24 @@ along with Gephi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 import infoextraction.graphDbPipeline;
+import metroMapMockup.metroMapPipeLine;
 import org.gephi.appearance.api.AppearanceController;
 import org.gephi.appearance.api.AppearanceModel;
 import org.gephi.appearance.api.Function;
-import org.gephi.appearance.plugin.RankingElementColorTransformer;
 import org.gephi.appearance.plugin.RankingNodeSizeTransformer;
-import org.gephi.appearance.plugin.UniqueElementColorTransformer;
 import org.gephi.graph.api.*;
 import org.gephi.io.exporter.api.ExportController;
-import org.gephi.layout.plugin.AutoLayout;
-import org.gephi.layout.plugin.force.StepDisplacement;
-import org.gephi.layout.plugin.force.yifanHu.YifanHuLayout;
-import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
 import org.gephi.preview.api.PreviewController;
 import org.gephi.preview.api.PreviewModel;
 import org.gephi.preview.api.PreviewProperty;
 import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
-import org.gephi.statistics.plugin.GraphDistance;
 import org.openide.util.Lookup;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import static org.neo4j.server.rest.transactional.ResultDataContent.graph;
 
 
 public class displayPipeline {
@@ -53,19 +44,28 @@ public class displayPipeline {
     UndirectedGraph undirectedGraph;
     PreviewModel preview;
 
-
+    public static void main(String[] args){
+        graphDbPipeline db = new graphDbPipeline("demo2/neo4j-store");
+        db.readDatabase();
+        displayPipeline d = new displayPipeline(db,"fullthingy2");
+        d.createDisplay();
+    }
+//    Constructor
     public displayPipeline(graphDbPipeline database,String filename){
         this.database = database;
         this.fileName = filename;
     }
+
+//    Create some default preview properties
     private void setPreview(){
         preview = Lookup.getDefault().lookup(PreviewController.class).getModel();
         preview.getProperties().putValue(PreviewProperty.EDGE_COLOR,new EdgeColor(Color.GREEN));
         preview.getProperties().putValue(PreviewProperty.EDGE_THICKNESS,new Float(0.1f));
         preview.getProperties().putValue(PreviewProperty.NODE_LABEL_FONT,
                 preview.getProperties().getFontValue(PreviewProperty.NODE_LABEL_FONT).deriveFont(8));
-
     }
+
+//    Get the sent numbers by splitting the string on spaces and calculate the average
     public int splitOnSpace(String s) {
         String[] words = s.split(" ");
         int average = 0;
@@ -81,6 +81,7 @@ public class displayPipeline {
         return average/length;
     }
 
+//    Import nodes from database
     private void getNodes(){
         for (nodeContainer s :database.getEntityNodes()){
             Node n = graphModel.factory().newNode(s.toString());
@@ -89,36 +90,56 @@ public class displayPipeline {
             undirectedGraph.addNode(n);
         }
     }
+
+//    Import matches edges from the database
     private void manageEdges(){
         for (edgeContainer e: database.getRelationships()){
             Edge edge = graphModel.factory().newEdge(undirectedGraph.getNode(e.getNode1()),
                     undirectedGraph.getNode(e.getNode2()),0,false);
             edge.setAttribute("matches",e.getMatches());
             edge.setAttribute("documents",e.getDocument());
+            edge.setAttribute("year",null);
+            edge.setAttribute("relationship",null);
+
             undirectedGraph.addEdge(edge);
         }
     }
-//    private void startDB(){
-//        database.readDatabase();
-//    }
+
+//    Import INTERACTION type edges from the database
+    private void manageInteractionEdges(){
+        for (edgeContainer e: database.getInteractionRelationships()){
+            Edge edge = graphModel.factory().newEdge(undirectedGraph.getNode(e.getNode1()),
+                    undirectedGraph.getNode(e.getNode2()),0,false);
+            edge.setAttribute("matches",e.getMatches());
+            edge.setAttribute("documents",e.getDocument());
+            edge.setAttribute("year",e.getDate());
+            edge.setAttribute("hasrel","yes");
+            edge.setAttribute("relationship",e.getRelationship());
+            undirectedGraph.addEdge(edge);
+        }
+    }
+
+//    Initialize a project and workspace
     private void initializeWorkSpace(){
-        //Init a project - and therefore a workspace
         ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
         Workspace workspace = pc.getCurrentWorkspace();
-
-        //Get a graph model - it exists because we have a workspace
         graphModel = Lookup.getDefault().lookup(GraphController.class).getGraphModel(workspace);
         graphModel.getNodeTable().addColumn("mentions", Integer.class);
         graphModel.getEdgeTable().addColumn("matches",Integer.class);
         graphModel.getEdgeTable().addColumn("documents",String.class);
+        graphModel.getEdgeTable().addColumn("relationship",String.class);
+        graphModel.getEdgeTable().addColumn("year",String.class);
+        graphModel.getEdgeTable().addColumn("hasrel",String.class);
 
         undirectedGraph = graphModel.getUndirectedGraph();
     }
 
+//    Create a display for the graph
     public void createDisplay(){
         initializeWorkSpace();
         getNodes();
+        manageInteractionEdges();
         manageEdges();
         setPreview();
         manageNodeRankings();
@@ -128,6 +149,8 @@ public class displayPipeline {
 //        System.out.println("Node2 degree: " + undirectedGraph.getDegree(undirectedGraph.getNode("Bank of England")));
 
     }
+
+//    Export graph to file
     private void exportGraph(){
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
@@ -149,6 +172,7 @@ public class displayPipeline {
         return sent;
     }
 
+//    Manage node size by degree
     private void manageNodeRankings(){
         AppearanceController appearanceController = Lookup.getDefault().lookup(AppearanceController.class);
         AppearanceModel appearanceModel = appearanceController.getModel();
@@ -159,6 +183,7 @@ public class displayPipeline {
         appearanceController.transform(degreeRanking);
     }
 
+//    Colour nodes by how early they appear in text
     private void manageColourRanking(){
         colourManager colors = new colourManager();
         for (Node n: undirectedGraph.getNodes()){
@@ -167,31 +192,11 @@ public class displayPipeline {
 
     }
 
+//    Rank edge weight by number of matches
     private void manageedgeThickness(){
         for (Edge e: undirectedGraph.getEdges()){
             e.setWeight(Double.parseDouble(e.getAttribute("matches").toString()));
         }
     }
-
-    private void setAutoLayout(){
-        AutoLayout autoLayout = new AutoLayout(5, TimeUnit.MINUTES);
-        autoLayout.setGraphModel(graphModel);
-        YifanHuLayout firstLayout = new YifanHuLayout(null, new StepDisplacement(1f));
-        ForceAtlasLayout secondLayout = new ForceAtlasLayout(null);
-        AutoLayout.DynamicProperty adjustBySizeProperty = AutoLayout.createDynamicProperty("forceAtlas.adjustSizes.name", Boolean.TRUE, 0.1f);//True after 10% of layout time
-        AutoLayout.DynamicProperty repulsionProperty = AutoLayout.createDynamicProperty("forceAtlas.repulsionStrength.name", 500., 0f);//500 for the complete period
-        autoLayout.addLayout(firstLayout, 0.5f);
-        autoLayout.addLayout(secondLayout, 0.5f, new AutoLayout.DynamicProperty[]{adjustBySizeProperty, repulsionProperty});
-        autoLayout.execute();
-
-        //Export
-        ExportController ec = Lookup.getDefault().lookup(ExportController.class);
-        try {
-            ec.exportFile(new File("sony.gexf"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
 
 }

@@ -187,7 +187,7 @@ public class coreferenceResolution {
                     toDelete.add(s);
                     toAdd.add(managePotentialAbbrev(s));
                 }
-                else if (checkIfExists(s)!= null){
+                else if (checkIfExists (s)!= null){
                     toDelete.add(s);
                     toAdd.add(checkIfExists(s));
                 }

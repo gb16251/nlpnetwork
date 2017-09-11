@@ -3,6 +3,8 @@ package infoextraction;
 /**
  * Created by Gabriela on 07-Jul-17.
  */
+
+//A class for managing acronyms for coreference resolution
 public class acronymManager {
 
     public String[] getArray(String s){
@@ -18,6 +20,7 @@ public class acronymManager {
 
     }
 
+//    Check if a string can be split on space or periods and return the abbreviation
     public String splitString(String s){
         if (s.contains(" ") && !s.contains(".")) return splitOnSpace(s);
         if(s.contains(".") && !s.contains(" ")) return splitOnPeriod(s);
@@ -48,6 +51,7 @@ public class acronymManager {
     }
 
 
+//    Use the edit distance to determine if it is a possible abbreviation
     public boolean isPossibleAbbrev(String a, String b){
         a = a.toLowerCase();
         b = b.toLowerCase();

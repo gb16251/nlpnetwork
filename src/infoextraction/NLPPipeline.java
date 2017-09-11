@@ -39,7 +39,7 @@ public class NLPPipeline {
     public void startPipeLine(){
 //        openFiles filestream = new openFiles();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention, dcoref,depparse,relation,natlog,openie");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse,mention,coref,depparse,relation,natlog,openie");
 //        props.setProperty("coref.language", "en");
 //        props.setProperty("coref.algorithm", "neural");
         //"statistical" : "neural"
@@ -59,11 +59,10 @@ public class NLPPipeline {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         corefResolution = new coreferenceResolution(document,file.getTitle(),currentSent);
         getAnnotations(sentences,file.getTitle());
-        corefResolution.printCorefs();
+//        corefResolution.printCorefs();
     }
 
     public void getAnnotations (List<CoreMap> sentences,String filename) {
-        network = new netTemplate();
         for (CoreMap sentence : sentences) {
             Sentence sent = new Sentence(sentence);
             Collection<RelationTriple> triples = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
@@ -78,7 +77,8 @@ public class NLPPipeline {
             }
             currentSent++;
         }
-        network.printNetWorkToFile(filename);
+        network.printNetwork();
+//      network.printNetWorkToFile(filename);
     }
 
     public void getAnnotationsFour (List<CoreMap> sentences) {
@@ -95,7 +95,7 @@ public class NLPPipeline {
             }
             network = createPairs(entitiesList,getTimeStamps(sentence),network);
         }
-//        network.printNetwork();
+        network.printNetwork();
     }
 
 
@@ -118,6 +118,19 @@ public class NLPPipeline {
             }
         }
     }
+
+    public int evalDefault(){
+        testTwoNetwork one = new testTwoNetwork();
+        netTemplate ideal = one.getnT();
+        calculatePreRec F1 = new calculatePreRec(ideal,network);
+        System.out.print("F1 score: ");
+        System.out.println(F1.getF1());
+        networkComparator nC = new networkComparator(50,30,20,ideal,network);
+        System.out.print("Eval Score: ");
+        System.out.println((int)nC.calculatePositiveScore());
+        return (int)nC.calculatePositiveScore();
+    }
+
 
     public int[] evalNetwork(){
         testOneNetwork one = new testOneNetwork();
@@ -166,9 +179,7 @@ public class NLPPipeline {
                                             int sentence,
                                             List<RelationMention> relMentions) {
         for (String s1:ents) {
-            System.out.println(sentence);
             for (int i = ents.indexOf(s1) + 1; i < ents.size(); i++) {
-                System.out.println(ents);
                 String rels = returnRelation(s1,ents.get(i),triples,sentence,filename);
                 String relsM = returnRelm(s1,ents.get(i),relMentions,sentence,filename);
                 net.addConnection(s1, ents.get(i), listToString(date),filename,rels,sentence);

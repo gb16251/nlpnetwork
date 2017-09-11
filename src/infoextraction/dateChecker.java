@@ -22,7 +22,7 @@ public class dateChecker {
         String words[] = checkIfNeedsToSplit(s);
         List<String> dates = new ArrayList<>();
         if (words == null) {
-            if (isYear(s) || isMonth(s)) {
+            if (isYearStrict(s) || isMonth(s)) {
                 dates.add(s);
             }
         } else {
@@ -39,7 +39,7 @@ public class dateChecker {
             if(!words[i].equals("")) {
                 if (isMonth(words[i])) {
                     validDates.add(words[i]);
-                } else if (isYear(words[i])) {
+                } else if (isYearStrict(words[i])) {
                     validDates.add(words[i]);
                 }
             }
@@ -94,10 +94,10 @@ public class dateChecker {
     private boolean isYear(String s) {
         int year = Year.now().getValue() + 4;
         if (isDigits(s)) {
-            int potentialYear = Integer.parseInt(s);
-            if (potentialYear <= year && potentialYear > 1800) {
+//            int potentialYear = Integer.parseInt(s);
+//            if (potentialYear <= year && potentialYear > 1800) {
                 return true;
-            }
+//            }
         }
         return false;
     }
@@ -108,6 +108,26 @@ public class dateChecker {
                 if(s.charAt(i)!= ' ') {
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    private boolean isYearStrict(String s) {
+        int year = Year.now().getValue() + 4;
+        if (isDigitsStrict(s)) {
+            int potentialYear = Integer.parseInt(s);
+            if (potentialYear <= year && potentialYear > 1800) {
+            return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isDigitsStrict(String s) {
+        for (int i = 0; i <= s.length() - 1; i++) {
+            if (s.charAt(i) > '9' || s.charAt(i) < '0') {
+                    return false;
             }
         }
         return true;

@@ -4,6 +4,7 @@ import edu.stanford.nlp.util.ArraySet;
 import graphDisplay.colourManager;
 import graphDisplay.displayPipeline;
 import infoextraction.graphDbPipeline;
+import infoextraction.inforun;
 import org.gephi.graph.api.*;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.preview.api.PreviewController;
@@ -25,8 +26,9 @@ import java.util.Set;
  * Created by Gabriela on 22-Aug-17.
  */
 public class metroMapPipeLine {
-    private graphDbPipeline database = new graphDbPipeline("");
+    private graphDbPipeline database;
     metroMap map;
+    String fileName;
     colourManager colour = new colourManager();
     GraphModel graphModel;
     DirectedGraph directedGraph;
@@ -34,14 +36,23 @@ public class metroMapPipeLine {
     int size;
 
 
+    public static void main(String[] args){
+        graphDbPipeline db = new graphDbPipeline("demo2/neo4j-store");
+        db.readDatabase();
+        metroMapPipeLine mm = new metroMapPipeLine(db,"fullthingy");
+        mm.createDisplay();
+    }
 
-    private void createDisplay(){
-        startDB();
+    public metroMapPipeLine(graphDbPipeline database,String filename){
+        this.database = database;
+        this.fileName = filename;
+    }
+
+    public void createDisplay(){
         map = new metroMap(database.getMetroLines(),database.getMetroStops());
         initializeWorkSpace();
         getNodes();
         getEdges();
-//        map.printLines();
         setPreview();
         exportGraph();
     }
@@ -67,16 +78,15 @@ public class metroMapPipeLine {
         graphModel.getNodeTable().addColumn("Year", String.class);
         graphModel.getNodeTable().addColumn("Relation", String.class);
         graphModel.getEdgeTable().addColumn("entity",String.class);
+
         directedGraph = graphModel.getDirectedGraph();
     }
-    private void startDB(){
-        database.readDatabase();
-    }
+
     private void exportGraph(){
         //Export full graph
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            ec.exportFile(new File("demo2mm.gexf"));
+            ec.exportFile(new File("gephi/" + fileName + "mm"+".gexf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;
@@ -86,133 +96,58 @@ public class metroMapPipeLine {
     private void getNodes(){
         for(metroStop stop: map.getReducedStops()){
             Node n = graphModel.factory().newNode(Integer.toString(stop.getId())) ;
-//            System.out.println(stop.getYear());
-//            System.out.println(stop.getRelationship());
-
             n.setAttribute("Entity1",stop.getLine1());
             n.setAttribute("Entity2",stop.getLine2());
             n.setAttribute("Year",stop.getYear());
             n.setAttribute("Relation",stop.getRelationship());
             n.setColor(Color.WHITE);
             n.setLabel(stop.getYear() + " " + stop.getRelationship());
-//            float x = (float) (((0.01 + Math.random()) * 1000) - 500);
-//            float y = (float) (((0.01 + Math.random()) * 1000) - 500);
-//            n.setPosition(x,y);
-//            n.setX(((float)stop.getCoord()/100));
-//            n.setY((float)30);
             directedGraph.addNode(n);
         }
-    }
-
-
-    private int getNodeNumber(){
-        return directedGraph.getNodeCount();
-    }
-
-    private int findFirstPerfectSquare(int i){
-        int sqrt = (int) Math.sqrt(i);
-        while(sqrt * sqrt != i){
-            i++;
-            sqrt = (int) Math.sqrt(i);
-        }
-        return i;
-    }
-
-    private boolean[][] setLayout(){
-        int i = (int) Math.sqrt(findFirstPerfectSquare(getNodeNumber()+ 10));
-        size = i*3;
-        boolean[][] layout = new boolean[i*3][i*3];
-        for (int j = 0;j<i*3;j++){
-            for(int l = 0; l<l*3;l++){
-                layout[j][l] = false;
-            }
-        }
-        return layout;
-    }
-    private int[] FindNextEmptyCell(boolean[][] array){
-        int[] result = new int[2];
-        for (int j = 1;j<size -1;j = j+3 ) {
-            for (int l = 1; l < size - 1; l = l + 3) {
-                if (!array[j][l] && array[j - 1][l] && !array[j - 1][l + 1] && !array[j - 1][l - 1] &&
-                        !array[j + 1][l] && !array[j + 1][l + 1] && !array[j + 1][l - 1] && !array[j][l + 1]
-                        && !array[j][l - 1]) {
-                    result[0] = j;
-                    result[1] = l;
-                    return result;
-                }
-            }
-        }
-         return result;
-    }
-
-    private boolean[][] markAsOccupied(boolean[][] array, int[] cell){
-        for (int j = cell[0] -1; j<= cell[0] + 1;j++ ) {
-            for (int l = cell[1] - 1; l < cell[1] - 1; l++) {
-                array[j][l] = true;
-            }
-        }
-        return array;
-    }
-
-    private boolean[][] placeNode(Node n, boolean[][] array){
-        int[] pos = FindNextEmptyCell(array);
-        array = markAsOccupied(array,pos);
-        n.setPosition((float)pos[0],(float)pos[1]);
-        n.setX((float)pos[0]);
-        n.setY((float)pos[1]);
-        return array;
     }
 
     private void getEdges(){
         int id = 0;
         String lastNodeId ;
-        float y = 0;
+        float y = 100;
         for(metroLine m :map.getLines()) {
+            float x = -800;
             Node n = graphModel.factory().newNode(m.getName() + " start");
-//            n.setX((float)(0));
-//            n.setY(y);
+            n.setX(-1000); n.setY(y);
             n.setLabel(m.getName());
             lastNodeId = m.getName() + " start";
             directedGraph.addNode(n);
             for (int i = 0; i < m.getSortedYears().length; i++) {
                 metroStop s = m.searchByYear(m.getSortedYears()[i]);
-                System.out.println(s.getYear());
-                System.out.println(s.getRelationship());
                 Node target = getNodeByRel(s.getYear(),s.getRelationship());
                 if(!edgeExists(directedGraph.getNode(lastNodeId), target)) {
-                    Edge edge = graphModel.factory().newEdge(directedGraph.getNode(lastNodeId),
-                            target, id, true);
-                    edge.setColor(new Color(colour.createSineWaves(Integer.toString(m.getId())),
-                            colour.createSineWaves(Integer.toString(m.getId())),
-                            0));
-//                if( directedGraph.getNode(Integer.toString(s.getId())).y() > 0){
-//                    directedGraph.getNode(Integer.toString(s.getId())).setY(y);
-//                }
-                    edge.setWeight(20);
+                    addEdge(m,target,lastNodeId,id);
+                    x = setTargetNodePosition(target,x,y);
                     id++;
                     lastNodeId = target.getId().toString();
-                    edge.setLabel(m.getName());
-                    edge.setAttribute("entity", m.getName());
-                    directedGraph.addEdge(edge);
-                    y = y - 100;
                 }
             }
-//            directedGraph.removeNode(n);
-
-//            Node n2 = graphModel.factory().newNode(m.getName() + " end");
-//            n2.setLabel(m.getName());
-//            directedGraph.addNode(n2);
-//
-//            Edge edge = graphModel.factory().newEdge(directedGraph.getNode(lastNodeId),
-//                    undirectedGraph.getNode(m.getName() + " end"), id, false);
-//            id++;
-//            edge.setAttribute("entity", m.getName());
-//            directedGraph.addEdge(edge);
-
+            y = y - 50;
         }
-
     }
 
+    private float setTargetNodePosition(Node target, float x, float y){
+        if(target.y() == 0){
+            target.setY(y);
+        }
+        if( target.x() == 0){
+            target.setX(x);
+        }
+        return x + 200;
+    }
+
+    private void addEdge(metroLine m, Node target,String lastNodeId, int id){
+        Edge edge = graphModel.factory().newEdge(directedGraph.getNode(lastNodeId),
+                target, id, true);
+        edge.setLabel(m.getName());
+        edge.setAttribute("entity", m.getName());
+        directedGraph.addEdge(edge);
+    }
     private boolean edgeExists(Node n1, Node n2){
         for(Edge e : directedGraph.getEdges().toArray()) {
             if (e.getSource().getLabel().equals(n1.getLabel()) && e.getTarget().getLabel().equals(n2.getLabel())) {
@@ -240,12 +175,13 @@ public class metroMapPipeLine {
                 }
             }
         }
-        System.out.println("unfortunately i am here");
         return null;
     }
-    public static void main(String args[]) {
-        metroMapPipeLine display = new metroMapPipeLine();
-        display.createDisplay();
+    private void startDB(){
+        try {
+            database.initializeGraphDB();
+        }
+        catch (IOException e ){}
     }
 
 }

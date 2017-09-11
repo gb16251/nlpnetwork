@@ -3,6 +3,8 @@ package infoextraction;
 /**
  * Created by Gabriela on 26-Jul-17.
  */
+
+//A class for calculating the precision, recall and F1 score for nodes
 public class calculatePreRec {
     private netTemplate ideal = new netTemplate();
     private netTemplate tocompare = new netTemplate();

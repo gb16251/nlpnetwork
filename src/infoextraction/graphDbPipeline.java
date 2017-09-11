@@ -131,6 +131,7 @@ public class graphDbPipeline {
         }
     }
 
+
     private boolean fillSources (Node first, Node second,String filename){
         for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
             if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
@@ -144,11 +145,13 @@ public class graphDbPipeline {
         return false;
     }
 
+//    See if the given source already exists on the edge
     private boolean sourceExists(Relationship r,String filename){
         if(r.getProperty("files").toString().contains(filename)) return true;
         return false;
     }
 
+//    Add new INTERACTION between nodes
     private void createRelationship(Node first, Node second, String date){
         setMatches(first,second,"");
         if (needNewConnection(first, second, date,"") && !date.equals("")) {
@@ -159,6 +162,8 @@ public class graphDbPipeline {
             }
         }
     }
+
+//    Create a MATCHES type edge between nodes
     private void setMatches(Node first, Node second,String filename){
         try (Transaction tx = graphDb.beginTx()) {
             if (!increaseMatches(first,second,filename)){
@@ -170,6 +175,7 @@ public class graphDbPipeline {
         }
     }
 
+//    Find and increase the matches edge and add a new file if needed
     private boolean increaseMatches (Node first, Node second,String filename){
         for (Relationship r: first.getRelationships(RelTypes.MATCHES)) {
             if (r.getOtherNode(first).getProperty("entity").equals(second.getProperty("entity"))) {
@@ -183,12 +189,14 @@ public class graphDbPipeline {
         return false;
     }
 
+//    Increases the matches string
     private String increaseString(String s){
         int i = Integer.parseInt(s);
         i++;
         return Integer.toString(i);
     }
 
+//    Add a new connection between the two nodes
     private boolean needNewConnection(Node first, Node second, String date,String rel){
         try (Transaction tx = graphDb.beginTx()) {
             for (Relationship r : first.getRelationships()) {
@@ -205,6 +213,7 @@ public class graphDbPipeline {
 
 
 
+//    Add mention place to node
     private Node addMention(Node node, int i){
         try (Transaction tx = graphDb.beginTx()) {
             if (!node.getProperty("mentionPlace").toString().contains(" " + Integer.toString(i) + " ")) {
@@ -265,6 +274,29 @@ public class graphDbPipeline {
             tx.success();
         }
         return addToDisplay;
+    }
+
+    public List<edgeContainer> getInteractionRelationships() {
+        List<edgeContainer> edges = new ArrayList<>();
+        try (Transaction tx = graphDb.beginTx()) {
+            ResourceIterable<Relationship> rels = graphDb.getAllRelationships();
+            for (Relationship r : rels) {
+                if (r.getType().name().equals("INTERACTION")) {
+                    edgeContainer e = new edgeContainer(r.getEndNode().getProperty("entity").toString(),
+                            r.getStartNode().getProperty("entity").toString(),
+                            r.getProperty("document").toString(),
+                            1);
+                    e.setAdditionalInfo( r.getProperty("date").toString(),
+                            r.getProperty("relationship").toString());
+                    edges.add(e);
+//                    System.out.println(r.getEndNode().getProperty("entity").toString());
+//                    System.out.println( r.getStartNode().getProperty("entity").toString());
+//                    System.out.println(r.getProperty("matches").toString());
+                }
+                tx.success();
+            }
+        }
+        return edges;
     }
 
     public List<edgeContainer> getRelationships() {
@@ -338,8 +370,6 @@ public class graphDbPipeline {
         }
     }
 
-
-
     public HashMap<String,Integer> setMetroId(){
         HashMap<String,Integer> metroID = new HashMap<>();
         int i = 1;
@@ -393,36 +423,12 @@ public class graphDbPipeline {
         return stops;
     }
 
-//    public metroMap getMetroMap(){
-//        metroMap map = new metroMap();
-//        int i = 1;
-//        try (Transaction tx = graphDb.beginTx()) {
-//            ResourceIterable<Node> iterable = graphDb.getAllNodes();
-//            for (Node n : iterable) {
-//                metroLine line = new metroLine(i++,n.getProperty("entity").toString());
-//                Iterable<Relationship> rels =  n.getRelationships(RelTypes.INTERACTION);
-//                for(Relationship r : rels){
-//                    if(r.getProperty("date").toString().length() > 0){
-//                        line.addStop(new metroStop(n.getProperty("entity").toString(),
-//                                r.getOtherNode(n).getProperty("entity").toString(),
-//                                (r.getProperty("date").toString())));
-//                    }
-//                }
-//                map.addLine(line);
-//            }
-//            tx.success();
-//        }
-//        return map;
-//    }
-
-
 
     private Traverser findConnectedGraph(Node startNode)
     {
         TraversalDescription td = graphDb.traversalDescription();
         return td.traverse( startNode );
     }
-
 
         private static void shutdown()
     {

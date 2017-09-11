@@ -16,12 +16,14 @@ public class metroLine {
     private List<metroStop> stops = new ArrayList<>();
     private double[] sortedYears;
     private List<Integer> added = new ArrayList<>();
+    private int stopsno = 0;
 
+    public int getStopsno() {
+        return stopsno;
+    }
 
-    public void PrintSortedYears(){
-        for(int i = 0; i<sortedYears.length;i++){
-            System.out.println(sortedYears[i]);
-        }
+    public void setStopsno(int stopsno) {
+        this.stopsno = stopsno;
     }
 
     public double[] getSortedYears() {
@@ -74,6 +76,7 @@ public class metroLine {
 
     public void addStop(metroStop stop){
         stops.add(stop);
+        stopsno++;
     }
 
     public metroLine(int id,String name){

@@ -6,6 +6,9 @@ import java.util.List;
 /**
  * Created by Gabriela on 26-Jul-17.
  */
+
+//Used for evaluation
+// calculates the averages for individual parameter values
 public class averageCalculator {
     private int[] sums = new int[101];
     private int[] values = new int[101];
